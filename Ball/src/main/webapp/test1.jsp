@@ -3,7 +3,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>네이버 지도오오 테스트</title>
+    <title>네이버 지도오 테스트</title>
     <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=z61duuh6wp"></script>
 </head>
 <body>

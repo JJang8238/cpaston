@@ -1,6 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" language="java" %>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -42,6 +42,7 @@
 
     <!-- Page Content -->
     <div class="container px-4 px-lg-5">
+
         <!-- Heading Row -->
         <div class="row gx-4 gx-lg-5 align-items-center my-5">
             <div class="col-lg-7">
@@ -49,48 +50,111 @@
                      src="<%=request.getContextPath()%>/assets/img/football.png" alt="플랩풋볼 메인 이미지" />
             </div>
             <div class="col-lg-5">
-                <h1 class="font-weight-light">우리의 운동 플랫폼</h1>
-                <p>이 사이트는 경기 매칭, 커뮤니티, 리뷰 기능을 모두 제공합니다.</p>
+                <h1 class="fw-bold">우리의 운동 플랫폼</h1>
+                <p class="text-muted">이 사이트는 경기 매칭 기능을 중심으로 제공합니다.</p>
                 <a class="btn btn-primary" href="<%=request.getContextPath()%>/login.jsp">지금 참여하기</a>
             </div>
         </div>
 
-        <!-- Call to Action -->
-		<div class="my-5 p-3 bg-secondary text-white text-center rounded">
-        심한 욕설, 불법 행위 등을 금지합니다.
-   	 	</div>
+        <!-- Notice -->
+        <div class="my-5 p-3 bg-secondary text-white text-center rounded">
+            심한 욕설, 불법 행위 등을 금지합니다.
+        </div>
 
-        <!-- Content Row -->
-    <div class="row text-center">
-        <div class="col-md-4">
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h3>경기 매칭</h3>
-                    <p>경기를 뛰고 싶을 때! 원하는 지역에서 매칭을 손쉽게!</p>
-                    <a href="#" class="btn btn-primary">자세히 보기</a>
+        <!-- 서비스 카드 (경기 매칭 / 커뮤니티 / 리뷰) -->
+        <div class="row text-center mb-5">
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h3 class="mb-2">경기 매칭</h3>
+                        <p class="text-muted">경기를 뛰고 싶을 때! 원하는 지역에서 매칭을 손쉽게!</p>
+                        <a href="#" class="btn btn-primary">자세히 보기</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mt-4 mt-md-0">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h3 class="mb-2">커뮤니티</h3>
+                        <p class="text-muted">같은 관심사를 가진 사람들과 소통하거나 모임을 만들어요.</p>
+                        <a href="#" class="btn btn-outline-primary">자세히 보기</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mt-4 mt-md-0">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h3 class="mb-2">리뷰</h3>
+                        <p class="text-muted">참여했던 경기/모임에 대해 자유롭게 리뷰하고 평가해요.</p>
+                        <a href="#" class="btn btn-outline-primary">자세히 보기</a>
+                    </div>
                 </div>
             </div>
         </div>
- 		<div class="col-md-4">
-           		 <div class="card mb-3">
-                		<div class="card-body">
-                    		<h3>커뮤니티</h3>
-                   		 <p>같은 관심사를 가진 사람들과 소통 또는 모임을 만들어요.</p>
-                   		 <a href="#" class="btn btn-primary">자세히 보기</a>
-               			</div>
-            	</div>
+
+        <!-- 오늘의 경기 예약 현황 -->
+        <h2 class="fw-bold mb-3">오늘의 경기 예약 현황</h2>
+        <div class="list-group mb-5 shadow-sm">
+
+            <!-- 샘플 데이터: 실제 데이터 바인딩 시 forEach로 교체 -->
+            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="h5 mb-1">12:00 경기</div>
+                    <small class="text-muted">서울 풋살장 | 인원: 10 / 18</small>
+                </div>
+                <span class="badge bg-danger rounded-pill px-3 py-2">경기 취소</span>
+            </a>
+
+            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="h5 mb-1">14:00 경기</div>
+                    <small class="text-muted">서울 풋살장 | 인원: 15 / 18</small>
+                </div>
+                <span class="badge bg-success rounded-pill px-3 py-2">예약중</span>
+            </a>
+
+            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="h5 mb-1">16:00 경기</div>
+                    <small class="text-muted">서울 풋살장 | 인원: 18 / 18</small>
+                </div>
+                <span class="badge bg-success rounded-pill px-3 py-2">예약중</span>
+            </a>
+
+            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="h5 mb-1">18:00 경기</div>
+                    <small class="text-muted">서울 풋살장 | 인원: 8 / 18</small>
+                </div>
+                <span class="badge bg-danger rounded-pill px-3 py-2">경기 취소</span>
+            </a>
+
+            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="h5 mb-1">20:00 경기</div>
+                    <small class="text-muted">서울 풋살장 | 인원: 12 / 18</small>
+                </div>
+                <span class="badge bg-success rounded-pill px-3 py-2">예약중</span>
+            </a>
+
+            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="h5 mb-1">22:00 경기</div>
+                    <small class="text-muted">서울 풋살장 | 인원: 17 / 18</small>
+                </div>
+                <span class="badge bg-success rounded-pill px-3 py-2">예약중</span>
+            </a>
+
+            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="h5 mb-1">23:59 경기</div>
+                    <small class="text-muted">서울 풋살장 | 인원: 13 / 18</small>
+                </div>
+                <span class="badge bg-success rounded-pill px-3 py-2">예약중</span>
+            </a>
         </div>
-		<div class="col-md-4">
-            		<div class="card mb-3">
-                		<div class="card-body">
-                    		<h3>리뷰</h3>
-                    		<p>참여했던 경기, 모임에 대해 자유롭게 리뷰하고 평가할 수 있어요.</p>
-                    		<a href="#" class="btn btn-primary">자세히 보기</a>
-                		</div>
-            		</div>
-       		 	</div>
-    		</div>
-		</div>
+
+    </div><!-- /.container -->
 
     <!-- Footer -->
     <footer class="py-5 bg-dark">

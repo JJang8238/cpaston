@@ -1,6 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 </main>
-<footer class="py-5 bg-dark">
+<footer class="py-5 bg-dark mt-5">
   <div class="container px-4 px-lg-5">
     <p class="m-0 text-center text-white">Copyright &copy; 플랩풋볼 2025</p>
   </div>

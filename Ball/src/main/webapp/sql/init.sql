@@ -1,24 +1,17 @@
--- 0) 통째로 새로 시작
-DROP DATABASE IF EXISTS grade_db;
-
--- 1) 생성 및 선택
-CREATE DATABASE grade_db
-  DEFAULT CHARACTER SET utf8mb4
-  COLLATE utf8mb4_general_ci;
 USE grade_db;
+SELECT DATABASE();   -- grade_db 인지 확인
 
--- 2) user
-CREATE TABLE user (
+/* 1) 사용자(user) + 이메일 인증 테이블 */
+CREATE TABLE `user` (
   id             INT AUTO_INCREMENT PRIMARY KEY,
   username       VARCHAR(50)  NOT NULL UNIQUE,
   password       VARCHAR(100) NOT NULL,
   name           VARCHAR(100) NOT NULL,
   role           VARCHAR(20)  NOT NULL DEFAULT 'student',
-  email          VARCHAR(255) UNIQUE,              -- 이메일은 유니크
-  email_verified TINYINT(1)   NOT NULL DEFAULT 0   -- 0=미인증, 1=인증
+  email          VARCHAR(255) UNIQUE,
+  email_verified TINYINT(1)   NOT NULL DEFAULT 0
 );
 
--- 3) 이메일 인증코드
 CREATE TABLE email_verification (
   email       VARCHAR(255) NOT NULL PRIMARY KEY,
   code        VARCHAR(6)   NOT NULL,
@@ -26,69 +19,65 @@ CREATE TABLE email_verification (
   attempts    INT          NOT NULL DEFAULT 0
 );
 
--- 4) 매치 테이블 (필요 시)
+/* 2) 경기(match_reservations) */
 CREATE TABLE match_reservations (
-  id              INT AUTO_INCREMENT PRIMARY KEY,
-  match_time      TIME         NOT NULL,
-  location        VARCHAR(100) NOT NULL,
-  current_players INT          NOT NULL DEFAULT 0,
-  max_players     INT          NOT NULL DEFAULT 18
+  id               INT AUTO_INCREMENT PRIMARY KEY,
+  match_time       TIME         NOT NULL,
+  match_date       DATE         NOT NULL,
+  location         VARCHAR(100) NOT NULL,
+  current_players  INT          NOT NULL DEFAULT 0,
+  max_players      INT          NOT NULL DEFAULT 18,
+  lat              DOUBLE       NULL,
+  lng              DOUBLE       NULL,
+  UNIQUE KEY ux_match_unique (location, match_date, match_time)
 );
 
--- 5) 테스트 데이터(선택)
-INSERT INTO match_reservations (match_time, location, current_players) VALUES
-('10:00:00', '서울 풋살장', 14),
-('12:00:00', '서울 풋살장', 10),
-('14:00:00', '서울 풋살장', 15),
-('16:00:00', '서울 풋살장', 18),
-('18:00:00', '서울 풋살장', 8),
-('20:00:00', '서울 풋살장', 12),
-('22:00:00', '서울 풋살장', 17),
-('23:59:00', '서울 풋살장', 13);
-
--- 6) 확인용
-SHOW COLUMNS FROM user;
-SHOW INDEX FROM user;
-
+/* 3) 예약(reservations) */
+CREATE TABLE reservations (
+  id                     INT AUTO_INCREMENT PRIMARY KEY,
+  user_id                INT NOT NULL,
+  match_reservation_id   INT NOT NULL,
+  created_at             TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uk_user_match (user_id, match_reservation_id),
+  CONSTRAINT fk_resv_user
+    FOREIGN KEY (user_id) REFERENCES `user`(id)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT fk_resv_match
+    FOREIGN KEY (match_reservation_id) REFERENCES match_reservations(id)
+    ON UPDATE CASCADE ON DELETE CASCADE
+);
 
 USE grade_db;
 
-SELECT DATABASE();  -- grade_db 가 나와야 정상
-
-SELECT COUNT(*) FROM user;
-
-SELECT id, username, email
-FROM user
-WHERE username = '새아이디' OR email = '새이메일@예시.com';
-
---------------------------------------------------------------------
-
-USE balldb;
-
-DROP TABLE IF EXISTS email_verification;
-DROP TABLE IF EXISTS user;
-
--- user 테이블
-CREATE TABLE user (
+-- 예약 기반 리뷰: 내가 뛴 경기용
+CREATE TABLE IF NOT EXISTS match_reviews (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  username VARCHAR(50) NOT NULL UNIQUE,
-  password VARCHAR(100) NOT NULL,
-  name VARCHAR(100) NOT NULL,
-  role VARCHAR(20) NOT NULL DEFAULT 'student',
-  email VARCHAR(255) UNIQUE,
-  email_verified TINYINT(1) NOT NULL DEFAULT 0
+  user_id INT NOT NULL,
+  match_reservation_id INT NOT NULL,
+  rating TINYINT NULL,
+  content TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES `user`(id) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (match_reservation_id) REFERENCES match_reservations(id) ON DELETE CASCADE ON UPDATE CASCADE,
+  INDEX ix_mrv_user (user_id),
+  INDEX ix_mrv_match (match_reservation_id)
 );
 
--- 이메일 인증 코드 저장 테이블
-CREATE TABLE email_verification (
-  email VARCHAR(255) NOT NULL PRIMARY KEY,
-  code VARCHAR(6) NOT NULL,
-  expires_at DATETIME NOT NULL,
-  attempts INT NOT NULL DEFAULT 0
+-- 장소(마커) 기반 리뷰: 지도에서 “보기”에 사용 (쓰기 필요하면 나중에 추가)
+CREATE TABLE IF NOT EXISTS place_reviews (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  place_name VARCHAR(100) NOT NULL,
+  rating TINYINT NULL,
+  content TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES `user`(id) ON DELETE CASCADE ON UPDATE CASCADE,
+  INDEX ix_prv_place (place_name),
+  INDEX ix_prv_user (user_id)
 );
 
-SHOW TABLES;
-DESCRIBE user;
-DESCRIBE email_verification;
+-- 데모용 --
+INSERT INTO match_reservations (match_date, match_time, location, current_players, max_players)
+VALUES (CURDATE(), '18:00:00', '증산체육공원', 4, 16);
 
-SELECT * FROM user;
+

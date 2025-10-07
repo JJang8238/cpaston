@@ -7,7 +7,7 @@
 
             <head>
                 <meta charset="UTF-8">
-                <title>메인 페이지123</title>
+                <title>메인 페이지</title>
                 <!-- Favicon -->
                 <link rel="icon" type="image/x-icon" href="<%=ctx%>/assets/favicon.ico" />
                 <!-- Bootstrap CSS -->

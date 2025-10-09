@@ -31,9 +31,24 @@
 
     <!-- 메인 -->
     <main class="container my-5">
-        <div class="card shadow-sm p-4">
-            <h2 class="text-primary text-center mb-4"><%= user.getName() %> 님의 마이페이지</h2>
-            <hr>
+    <!-- 프로필 영역 -->
+    <div class="card shadow-sm mb-4 p-4 d-flex flex-row align-items-center">
+        <img src="<%= (user.getProfileImage() != null) ? user.getProfileImage() : "assets/images/default-profile.png" %>"
+             alt="프로필 사진"
+             class="rounded-circle me-4"
+             style="width: 100px; height: 100px; object-fit: cover; border: 2px solid #dee2e6;">
+        <div>
+            <h3 class="mb-1 fw-bold"><%= user.getName() %> 님</h3>
+            <p class="text-muted mb-1">아이디: <%= user.getId() %></p>
+            <p class="text-muted mb-1">이메일: <%= user.getEmail() %></p>
+            <a href="editProfile.jsp" class="btn btn-outline-primary btn-sm mt-2">프로필 수정</a>
+        </div>
+    </div>
+
+    <!-- 기존 마이페이지 내용 -->
+    <div class="card shadow-sm p-4">
+        <h2 class="text-primary text-center mb-4"><%= user.getName() %> 님의 마이페이지</h2>
+        <hr>
 
             <!-- 예약 관리 -->
             <section class="mb-4">

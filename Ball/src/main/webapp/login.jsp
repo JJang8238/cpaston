@@ -1,7 +1,8 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
     <%@ include file="include/header.jsp" %>
 
-        <!-- ✅ Bootstrap Icons CDN 추가 -->
+        <!-- ✅ Bootstrap Icons & Bootstrap CSS 추가 -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
         <style>
@@ -32,18 +33,11 @@
                 color: #0d6efd;
             }
 
-            /* 아이콘 위치 조정 */
-            .toggle-icon {
+            /* 아이콘 정렬 */
+            .input-group-text {
+                background-color: transparent;
+                border-left: none;
                 cursor: pointer;
-                font-size: 1.2rem;
-                color: #6c757d;
-                margin-left: -35px;
-                display: flex;
-                align-items: center;
-            }
-
-            .toggle-icon:hover {
-                color: #0d6efd;
             }
         </style>
 
@@ -60,10 +54,11 @@
                     <label for="password" class="form-label">비밀번호</label>
                     <div class="input-group">
                         <input type="password" name="password" id="password" class="form-control" required>
-                        <span class="input-group-text bg-white">
-                            <!-- 기본: 비밀번호 숨김 상태 -->
-                            <i class="bi bi-ban toggle-icon" id="showIcon" onclick="togglePassword()"></i>
-                            <i class="bi bi-ban-fill toggle-icon d-none" id="hideIcon" onclick="togglePassword()"></i>
+
+                        <!-- 아이콘 영역 -->
+                        <span class="input-group-text" id="togglePassword" onclick="togglePassword()">
+                            <i class="bi bi-ban" id="showIcon"></i>
+                            <i class="bi bi-ban-fill d-none" id="hideIcon"></i>
                         </span>
                     </div>
                 </div>
@@ -86,8 +81,8 @@
 
                 if (pwField.type === "password") {
                     pwField.type = "text"; // 비밀번호 표시
-                    showIcon.classList.add("d-none");  // ban 숨김
-                    hideIcon.classList.remove("d-none"); // ban-fill 표시
+                    showIcon.classList.add("d-none");
+                    hideIcon.classList.remove("d-none");
                 } else {
                     pwField.type = "password"; // 비밀번호 숨김
                     showIcon.classList.remove("d-none");
@@ -95,5 +90,8 @@
                 }
             }
         </script>
+
+        <!-- Bootstrap JS (아이콘 클릭에 영향 없음, 부트스트랩 구성요소용) -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
         <%@ include file="include/footer.jsp" %>

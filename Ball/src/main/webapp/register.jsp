@@ -173,7 +173,7 @@
 
         function setDisabled(d) {
           ['username', 'btnCheckDup', 'password', 'passwordConfirm', 'name', 'btnRegister']
-          .forEach(id => { const el = document.getElementById(id); if (el) el.disabled = d; });
+            .forEach(id => { const el = document.getElementById(id); if (el) el.disabled = d; });
         }
         function enableForm() { setDisabled(false); }
         function toggleEye(id) { const el = document.getElementById(id); if (el) el.type = (el.type === 'password' ? 'text' : 'password'); }

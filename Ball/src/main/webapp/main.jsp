@@ -1,11 +1,29 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="true" %>
 <%@ page import="dto.User" %>
 <%
-    User loginUser = (User) session.getAttribute("loginUser");
-    if (loginUser == null) {
+    Object _loginObj = session.getAttribute("loginUser");
+    if (_loginObj == null) {
         response.sendRedirect("index.jsp");
         return;
     }
+
+    // dto.User일 수도 있고, 문자열일 수도 있으니 모두 대비
+    User loginUser = null;
+    String displayName = null;
+
+    if (_loginObj instanceof User) {
+        loginUser = (User) _loginObj;
+        try {
+            displayName = (loginUser.getName() != null && !loginUser.getName().isEmpty())
+                          ? loginUser.getName()
+                          : "사용자";
+        } catch (Exception ignore) {
+            displayName = "사용자";
+        }
+    } else {
+        displayName = String.valueOf(_loginObj); // 예: "admin"
+    }
+
     String ctx = request.getContextPath();
 %>
 <!DOCTYPE html>
@@ -34,7 +52,8 @@
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                 <li class="nav-item">
-                    <span class="nav-link disabled"><%= loginUser.getName() %>님 환영합니다</span>
+                    <!-- 🔁 방탄 출력: dto.User든 문자열이든 안전 -->
+                    <span class="nav-link disabled"><%= displayName %>님 환영합니다</span>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="<%=ctx%>/main.jsp">홈</a>

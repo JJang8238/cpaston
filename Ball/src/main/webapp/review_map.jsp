@@ -59,7 +59,7 @@
 
   <!-- Google Maps API -->
   <script
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCZ3fDFHzrvVp04VSbGjD8Yd8N9PDNiTPM&libraries=places&language=ko"
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDaHgeNhzhPvhJu3RGyjkhXWhdeGD5ijXA&libraries=places&language=ko"
     async defer></script>
 
   <script>

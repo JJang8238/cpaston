@@ -80,4 +80,13 @@ CREATE TABLE IF NOT EXISTS place_reviews (
 INSERT INTO match_reservations (match_date, match_time, location, current_players, max_players)
 VALUES (CURDATE(), '18:00:00', '증산체육공원', 4, 16);
 
+CREATE TABLE IF NOT EXISTS post (
+  id           INT AUTO_INCREMENT PRIMARY KEY,
+  title        VARCHAR(200)  NOT NULL,
+  content      MEDIUMTEXT    NOT NULL,
+  category     ENUM('전체','인기글','동네질문') NOT NULL DEFAULT '전체',
+  author       VARCHAR(100)  NOT NULL,             -- 작성자 표시용(세션의 username)
+  created_at   TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at   TIMESTAMP     NULL ON UPDATE CURRENT_TIMESTAMP
+);
 

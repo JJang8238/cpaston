@@ -5,7 +5,8 @@ import dto.User;
 import util.DBConnection;
 import util.PasswordUtil;  // SHA-256 해시 유틸
 
-public class UserDAO {
+
+public class UserDAO implements AutoCloseable {
 
     private Connection conn;
 
@@ -80,6 +81,8 @@ public class UserDAO {
                     User user = new User();
                     user.setId(rs.getInt("id"));
                     user.setUsername(rs.getString("username"));
+
+                    user.setPassword(rs.getString("password")); // 해시
                     user.setName(rs.getString("name"));
                     try { user.setRole(rs.getString("role")); } catch (SQLException ignore) {}
                     try { user.setEmail(rs.getString("email")); } catch (SQLException ignore) {}
@@ -178,10 +181,11 @@ public class UserDAO {
         try { user.setEmailVerified(rs.getInt("email_verified")); } catch (SQLException ignore) {}
         return user;
     }
-   
+
+
     // ----------------------------------------------------------------
     // 6) 회원 정보 수정 (이름, 이메일, 비밀번호, 프로필 이미지)
-    // ---------------------------------------------------------------
+    // ----------------------------------------------------------------
     public boolean updateUserProfile(User user, String newPassword) {
         StringBuilder sql = new StringBuilder(
             "UPDATE `user` SET `name`=?, `email`=?, `profile_image`=?"
@@ -220,4 +224,16 @@ public class UserDAO {
         return false;
     }
 
+
+    // ----------------------------------------------------------------
+    // 7) 리소스 정리: try-with-resources에서 자동 호출
+    // ----------------------------------------------------------------
+    @Override
+    public void close() {
+        if (conn != null) {
+            try {
+                if (!conn.isClosed()) conn.close();
+            } catch (SQLException ignore) {}
+        }
+    }
 }

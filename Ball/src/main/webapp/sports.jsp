@@ -359,11 +359,7 @@ window.initApp = initApp;
 </script>
 
 <!-- 구글 지도 + Places -->
-<<<<<<< HEAD
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=(maps javascripts api키)&libraries=places&callback=initApp"></script>
-=======
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDaHgeNhzhPvhJu3RGyjkhXWhdeGD5ijXA&libraries=places&callback=initApp"></script>
->>>>>>> 9c9a1dc922adba8981c83f10994b0143e362e30b
 
 <%@ include file="include/footer.jsp" %>
 </body>

@@ -59,7 +59,11 @@
 
   <!-- Google Maps API -->
   <script
+<<<<<<< HEAD
     src="https://maps.googleapis.com/maps/api/js?key=(maps javascripts api키)&libraries=places&language=ko"
+=======
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDaHgeNhzhPvhJu3RGyjkhXWhdeGD5ijXA&libraries=places&language=ko"
+>>>>>>> 9c9a1dc922adba8981c83f10994b0143e362e30b
     async defer></script>
 
   <script>

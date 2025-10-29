@@ -1,4 +1,5 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="true" %>
+<<<<<<< HEAD
     <%@ page import="dto.User" %>
         <% User loginUser=(User) session.getAttribute("loginUser"); if (loginUser==null) {
             response.sendRedirect("index.jsp"); return; } String ctx=request.getContextPath(); %>
@@ -15,6 +16,77 @@
                 <!-- Custom CSS -->
                 <link href="<%=ctx%>/css/styles.css" rel="stylesheet" />
             </head>
+=======
+<%@ page import="dto.User" %>
+<%
+    Object _loginObj = session.getAttribute("loginUser");
+    if (_loginObj == null) {
+        response.sendRedirect("index.jsp");
+        return;
+    }
+
+    // dto.User일 수도 있고, 문자열일 수도 있으니 모두 대비
+    User loginUser = null;
+    String displayName = null;
+
+    if (_loginObj instanceof User) {
+        loginUser = (User) _loginObj;
+        try {
+            displayName = (loginUser.getName() != null && !loginUser.getName().isEmpty())
+                          ? loginUser.getName()
+                          : "사용자";
+        } catch (Exception ignore) {
+            displayName = "사용자";
+        }
+    } else {
+        displayName = String.valueOf(_loginObj); // 예: "admin"
+    }
+
+    String ctx = request.getContextPath();
+%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>메인 페이지</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="<%=ctx%>/assets/favicon.ico" />
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="<%=ctx%>/css/styles.css" rel="stylesheet" />
+</head>
+<body>
+
+<!-- ✅ 네비게이션 -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container px-5">
+        <a class="navbar-brand" href="<%=ctx%>/main.jsp">볼피또</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <!-- 🔁 방탄 출력: dto.User든 문자열이든 안전 -->
+                    <span class="nav-link disabled"><%= displayName %>님 환영합니다</span>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<%=ctx%>/main.jsp">홈</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<%=ctx%>/mypage.jsp">마이페이지</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<%=ctx%>/logout.jsp">로그아웃</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+>>>>>>> 9c9a1dc922adba8981c83f10994b0143e362e30b
 
             <body>
 

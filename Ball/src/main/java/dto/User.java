@@ -12,7 +12,8 @@ public class User implements Serializable {
     private String role = "student"; // 기본 권한
     private String email;         // 이메일
     private int emailVerified;    // 0 = 미인증, 1 = 인증완료
-
+    private String profileImage;
+    
     public User() {}
 
     public User(int id, String username, String password, String name,
@@ -48,6 +49,9 @@ public class User implements Serializable {
 
     public int getEmailVerified() { return emailVerified; }
     public void setEmailVerified(int emailVerified) { this.emailVerified = emailVerified; }
+    
+    public String getProfileImage() { return profileImage; }
+    public void setProfileImage(String profileImage) { this.profileImage = profileImage; }
 
     // --- 편의 메서드 ---
     /** 인증 여부를 boolean 으로 바로 확인 */

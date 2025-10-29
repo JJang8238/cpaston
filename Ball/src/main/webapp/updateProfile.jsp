@@ -3,7 +3,7 @@
 
 <%
     request.setCharacterEncoding("UTF-8");
-    User user = (User) session.getAttribute("user");
+    User user = (User) session.getAttribute("loginUser");
 
     if (user == null) {
         response.sendRedirect("index.jsp");

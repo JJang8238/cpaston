@@ -2,7 +2,7 @@
 <%@ page import="dto.User" %>
 
 <%
-    User user = (User) session.getAttribute("user");
+    User user = (User) session.getAttribute("loginUser");
     if (user == null) {
         response.sendRedirect("index.jsp");
         return;

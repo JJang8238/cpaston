@@ -5,7 +5,7 @@ import dto.User;
 import util.DBConnection;
 import util.PasswordUtil;  // SHA-256 해시 유틸
 
-public class UserDAO {
+public class UserDAO implements AutoCloseable {
 
     private Connection conn;
 
@@ -80,6 +80,7 @@ public class UserDAO {
                     User user = new User();
                     user.setId(rs.getInt("id"));
                     user.setUsername(rs.getString("username"));
+                    user.setPassword(rs.getString("password")); // 해시
                     user.setName(rs.getString("name"));
                     try { user.setRole(rs.getString("role")); } catch (SQLException ignore) {}
                     try { user.setEmail(rs.getString("email")); } catch (SQLException ignore) {}
@@ -177,5 +178,58 @@ public class UserDAO {
         try { user.setEmail(rs.getString("email")); } catch (SQLException ignore) {}
         try { user.setEmailVerified(rs.getInt("email_verified")); } catch (SQLException ignore) {}
         return user;
+    }
+
+    // ----------------------------------------------------------------
+    // 6) 회원 정보 수정 (이름, 이메일, 비밀번호, 프로필 이미지)
+    // ----------------------------------------------------------------
+    public boolean updateUserProfile(User user, String newPassword) {
+        StringBuilder sql = new StringBuilder(
+            "UPDATE `user` SET `name`=?, `email`=?, `profile_image`=?"
+        );
+
+        // 새 비밀번호가 입력된 경우만 password 필드 포함
+        boolean changePassword = (newPassword != null && !newPassword.trim().isEmpty());
+        if (changePassword) {
+            sql.append(", `password`=?");
+        }
+        sql.append(" WHERE `id`=?");
+
+        try (PreparedStatement pstmt = getConn().prepareStatement(sql.toString())) {
+
+            pstmt.setString(1, user.getName());
+            pstmt.setString(2, user.getEmail());
+            pstmt.setString(3, user.getProfileImage());
+
+            int paramIndex = 4;
+
+            if (changePassword) {
+                String hashedPassword = PasswordUtil.hashPassword(newPassword);
+                pstmt.setString(paramIndex++, hashedPassword);
+            }
+
+            pstmt.setInt(paramIndex, user.getId());
+
+            int result = pstmt.executeUpdate();
+            return result == 1;
+
+        } catch (SQLException e) {
+            System.out.println("❌ SQL 오류 (updateUserProfile): " + e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    // ----------------------------------------------------------------
+    // 7) 리소스 정리: try-with-resources에서 자동 호출
+    // ----------------------------------------------------------------
+    @Override
+    public void close() {
+        if (conn != null) {
+            try {
+                if (!conn.isClosed()) conn.close();
+            } catch (SQLException ignore) {}
+        }
     }
 }

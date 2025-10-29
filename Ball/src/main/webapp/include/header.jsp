@@ -1,8 +1,5 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="true" %>
 <<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> 9c9a1dc922adba8981c83f10994b0143e362e30b
 <%@ page import="dto.User" %>
 <%
     // 세션에서 로그인 유저 정보 조회 (여러 키를 허용)
@@ -34,8 +31,6 @@
 <nav class="navbar navbar-expand-lg navbar-dark" style="background:#212529">
   <div class="container">
     <a class="navbar-brand fw-bold" href="<%=ctx%>/main.jsp">플랩풋볼</a>
-<<<<<<< HEAD
-=======
 =======
 <%
     // 컨텍스트 루트 (다른 JSP에서 ctx를 쓰는 경우가 있어 충돌 피하려고 ctxPath 사용)
@@ -79,7 +74,6 @@
   <div class="container">
     <a class="navbar-brand fw-bold" href="<%=ctxPath%>/main.jsp">플랩풋볼</a>
 >>>>>>> b972762a2b7dc89ab6d1c2de53c90cca833a1411
->>>>>>> 9c9a1dc922adba8981c83f10994b0143e362e30b
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNav"
             aria-controls="topNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -93,9 +87,6 @@
             <span class="navbar-text text-secondary me-lg-2"><%=displayName%>님 환영합니다</span>
           </li>
 <<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> 9c9a1dc922adba8981c83f10994b0143e362e30b
           <li class="nav-item">
             <a class="nav-link" href="<%=ctx%>/main.jsp">홈</a>
           </li>
@@ -116,8 +107,6 @@
           <li class="nav-item">
             <a class="nav-link" href="<%=ctx%>/register.jsp">회원가입</a>
           </li>
-<<<<<<< HEAD
-=======
 =======
           <li class="nav-item"><a class="nav-link" href="<%=ctxPath%>/main.jsp">홈</a></li>
           <li class="nav-item"><a class="nav-link" href="<%=ctxPath%>/mypage.jsp">마이페이지</a></li>
@@ -128,7 +117,6 @@
           <li class="nav-item"><a class="nav-link" href="<%=ctxPath%>/login.jsp">로그인</a></li>
           <li class="nav-item"><a class="nav-link" href="<%=ctxPath%>/register.jsp">회원가입</a></li>
 >>>>>>> b972762a2b7dc89ab6d1c2de53c90cca833a1411
->>>>>>> 9c9a1dc922adba8981c83f10994b0143e362e30b
         <% } %>
       </ul>
     </div>

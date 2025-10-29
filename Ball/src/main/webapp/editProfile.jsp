@@ -70,7 +70,7 @@
             font-size: 1em;
         }
         button:hover {
-            background-color: #45a049;
+            background-color: #0b5ed7;
         }
         .back-link {
             display: block;

@@ -62,7 +62,7 @@
         button {
             width: 100%;
             padding: 10px;
-            background-color: #4CAF50;
+            background-color: #0d6efd;
             color: white;
             border: none;
             border-radius: 6px;

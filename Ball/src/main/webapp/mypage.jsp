@@ -121,7 +121,7 @@
               <div class="fw-semibold"><%= fEmail %></div>
             </div>
             <div class="d-flex gap-2 mt-4">
-              <a href="<%=ctx%>/edit_profile.jsp" class="btn btn-primary">프로필 수정</a>
+              <a href="<%=ctx%>/editProfile.jsp" class="btn btn-primary">프로필 수정</a>
               <a href="<%=ctx%>/main.jsp" class="btn btn-outline-secondary">홈으로</a>
               <a href="<%=ctx%>/logout.jsp" class="btn btn-outline-danger ms-auto">로그아웃</a>
             </div>

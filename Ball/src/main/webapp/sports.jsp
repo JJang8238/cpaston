@@ -1,7 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="true" %>
 <%@ page import="dto.User" %>
 <%
-    // 로그인 세션 확인 (둘 중 하나만 있어도 로그인으로 간주)
+    // 로그인 체크
     User __u = (User) session.getAttribute("loginUser");
     Object __id = session.getAttribute("userId");
     Object __nm = session.getAttribute("username");
@@ -27,6 +27,9 @@
 <meta charset="UTF-8" />
 <title>스포츠 예약 및 주변 풋살장</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="referrer" content="origin">
+
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
 
 <style>
@@ -92,7 +95,7 @@ const ALL_MATCHES = [
       String loc = (m.getLocation()==null) ? "" : m.getLocation();
       int cur = m.getCurrentPlayers();
       int max = m.getMaxPlayers();
-      boolean cancel = cur < 12; // 네 기준 유지
+      boolean cancel = cur < 12; // 기존 기준 유지
       if(!first) out.print(",\n");
       first=false;
 %>
@@ -133,14 +136,9 @@ function renderMatches(src, venueName){
   future.sort(function(a,b){ return a.time.localeCompare(b.time); });
 
   future.forEach(function(m){
-    // 상태 뱃지
     var badgeClass = m.cancel? "bg-danger":"bg-success";
     var badgeText  = m.cancel? "경기 취소":"예약중";
-
-    // 예약 가능 판단
     var canBook = (m.time && m.time >= NOW && m.current < m.max);
-
-    // 예약 버튼
     var btnHtml = canBook
       ? '<button id="btn-'+m.id+'" class="btn btn-sm btn-primary" onclick="bookMatch(' + m.id + ')">예약하기</button>'
       : '<button class="btn btn-sm btn-secondary" disabled>예약 불가</button>';
@@ -188,11 +186,8 @@ async function bookMatch(matchId){
            : '예약 실패: ' + out.msg);
       return;
     }
-    // 인원 반영
     var curEl = document.getElementById('cur-'+matchId);
     if(curEl) curEl.textContent = out.current;
-
-    // 버튼 토글
     var btn = document.getElementById('btn-'+matchId);
     if(btn){
       btn.textContent = '예약됨';
@@ -200,8 +195,6 @@ async function bookMatch(matchId){
       btn.classList.add('btn-success');
       btn.disabled = true;
     }
-
-    // 메모리 데이터 갱신
     for (var i=0;i<ALL_MATCHES.length;i++){
       if(ALL_MATCHES[i].id === matchId){ ALL_MATCHES[i].current = out.current; break; }
     }
@@ -211,97 +204,98 @@ async function bookMatch(matchId){
   }
 }
 
-// ---------- 구글 지도/플레이스 ----------
-var map, placesService, infoWin;
+// ---------- ⬇⬇ 여기부터 카카오 지도 / Places 버전 ⬇⬇ ----------
+var kakaoMap, kakaoPlaces, infoWin;
 var listEl = document.getElementById('placeList');
+var userCenter = { lat: 37.5662952, lng: 126.9779451 }; // 기본: 시청
 
 function showPlacesError(msg){
   var el = document.getElementById('placesError');
   el.style.display='block'; el.textContent = msg; console.error(msg);
 }
 
-function initApp(){
+function initAppKakao(){
   if(navigator.geolocation){
     navigator.geolocation.getCurrentPosition(
-      function(pos){ initMap(pos.coords.latitude, pos.coords.longitude); },
-      function(){ initMap(37.5662952,126.9779451); },
+      function(pos){ initMapKakao(pos.coords.latitude, pos.coords.longitude); },
+      function(){ initMapKakao(userCenter.lat, userCenter.lng); },
       { enableHighAccuracy:true }
     );
   }else{
-    initMap(37.5662952,126.9779451);
+    initMapKakao(userCenter.lat, userCenter.lng);
   }
 }
 
-function initMap(lat,lng){
-  var center = new google.maps.LatLng(lat,lng);
-  map = new google.maps.Map(document.getElementById('map'), {
-    center:center, zoom:14, mapTypeControl:false, streetViewControl:false
-  });
-  infoWin = new google.maps.InfoWindow();
-  new google.maps.Marker({
-    position:center, map:map,
-    label:{text:"내 위치", className:""},
-    icon:{ path: google.maps.SymbolPath.CIRCLE, scale:6 }
+function initMapKakao(lat, lng){
+  userCenter = { lat, lng };
+
+  kakaoMap = new kakao.maps.Map(document.getElementById('map'), {
+    center: new kakao.maps.LatLng(lat, lng),
+    level: 4
   });
 
-  placesService = new google.maps.places.PlacesService(map);
-  searchFutsal(center);
+  // 내 위치 마커
+  new kakao.maps.Marker({
+    position: new kakao.maps.LatLng(lat, lng),
+    map: kakaoMap
+  });
+
+  kakaoPlaces = new kakao.maps.services.Places();
+  searchFutsalKakao(lat, lng);
 }
 
-function searchFutsal(center){
+function searchFutsalKakao(lat, lng){
   listEl.innerHTML = "";
-  var bounds = new google.maps.LatLngBounds();
+  var bounds = new kakao.maps.LatLngBounds();
 
-  placesService.nearbySearch(
-    { location:center, radius:3000, keyword:"풋살장" },
-    function(results, status, pagination){
-      if(status !== google.maps.places.PlacesServiceStatus.OK || !results){
-        showPlacesError("주변 장소 검색에 실패했습니다. (Places API)");
+  kakaoPlaces.keywordSearch(
+    '풋살장',
+    function(data, status, pagination){
+      if(status !== kakao.maps.services.Status.OK || !data){
+        showPlacesError('주변 장소 검색에 실패했습니다. (Kakao Places)');
         return;
       }
-      results.forEach(function(place){
-        addPlace(place, bounds);
+      data.forEach(function(place){
+        addPlaceKakao(place, bounds);
       });
-      map.fitBounds(bounds);
+      kakaoMap.setBounds(bounds, 24, 24, 24, 24);
       if(pagination && pagination.hasNextPage){ pagination.nextPage(); }
-    }
+    },
+    { x: lng, y: lat, radius: 3000 }
   );
 }
 
-function addPlace(place, bounds){
-  var pos = place.geometry && place.geometry.location;
-  if(!pos) return;
+function addPlaceKakao(place, bounds){
+  var lat = parseFloat(place.y), lng = parseFloat(place.x);
+  if (isNaN(lat) || isNaN(lng)) return;
 
-  var marker = new google.maps.Marker({ position:pos, map:map, title:place.name });
+  var marker = new kakao.maps.Marker({
+    position: new kakao.maps.LatLng(lat, lng),
+    map: kakaoMap,
+    title: place.place_name
+  });
 
-  marker.addListener('click', function(){
-    var html =
-      '<div style="padding:6px 8px;font-size:12px;">' +
-        '<strong>' + place.name + '</strong><br>' +
-        (place.vicinity || place.formatted_address || '') +
-      '</div>';
-    infoWin.setContent(html);
-    infoWin.open(map, marker);
-
+  kakao.maps.event.addListener(marker, 'click', function(){
     // 1) 경기 필터링
-    filterByVenue(place.name);
+    filterByVenue(place.place_name);
     document.getElementById('matchListBox').scrollIntoView({behavior:'smooth', block:'start'});
 
     // 2) 리뷰 패널 열기 + 로드
-    openReviewPanel(place.name);
-    loadPlaceReviews(place.name);
+    openReviewPanel(place.place_name);
+    loadPlaceReviews(place.place_name);
   });
 
+  // 목록 클릭으로도 선택되게
   var li = document.createElement('li');
   li.className = "list-group-item place-item";
-  li.innerHTML = '<strong>' + place.name + '</strong><br><small>' + (place.vicinity || '') + '</small>';
+  li.innerHTML = '<strong>' + (place.place_name||'') + '</strong><br><small>' + (place.road_address_name || place.address_name || '') + '</small>';
   li.onclick = function(){
-    map.panTo(pos);
-    google.maps.event.trigger(marker, 'click');
+    kakaoMap.panTo(new kakao.maps.LatLng(lat, lng));
+    kakao.maps.event.trigger(marker, 'click');
   };
   listEl.appendChild(li);
 
-  bounds.extend(pos);
+  bounds.extend(new kakao.maps.LatLng(lat, lng));
 }
 
 // ---------- 리뷰 패널 ----------
@@ -353,13 +347,25 @@ async function loadPlaceReviews(placeName){
     rvError.textContent = '리뷰를 불러오지 못했습니다. (' + err.message + ')';
   }
 }
-
-// 구글 스크립트 로더
-window.initApp = initApp;
 </script>
 
-<!-- 구글 지도 + Places -->
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDaHgeNhzhPvhJu3RGyjkhXWhdeGD5ijXA&libraries=places&callback=initApp"></script>
+<!-- ✅ 카카오 지도 SDK: 반드시 본인 키로 교체! (도메인 등록 필요) -->
+<!-- ✅ Kakao Maps SDK -->
+<!-- ✅ 카카오 지도 SDK -->
+<script src="http://dapi.kakao.com/v2/maps/sdk.js?appkey=f802c143efc8e04c44d5cbc892fe3198&libraries=services&autoload=false"></script>
+<script>
+  kakao.maps.load(function() {
+    console.log("✅ Kakao SDK loaded");
+
+    const mapContainer = document.getElementById('map');
+    const mapOption = {
+      center: new kakao.maps.LatLng(37.5665, 126.9780), // 서울 시청
+      level: 5
+    };
+    const map = new kakao.maps.Map(mapContainer, mapOption);
+  });
+</script>
+
 
 <%@ include file="include/footer.jsp" %>
 </body>

@@ -122,12 +122,44 @@
               <div class="fw-semibold"><%= fEmail %></div>
             </div>
             <div class="d-flex gap-2 mt-4">
-              <a href="<%=ctx%>/edit_profile.jsp" class="btn btn-primary">프로필 수정</a>
+              <a href="<%=ctx%>/editProfile.jsp" class="btn btn-primary">프로필 수정</a>
               <a href="<%=ctx%>/main.jsp" class="btn btn-outline-secondary">홈으로</a>
               <a href="<%=ctx%>/logout.jsp" class="btn btn-outline-danger ms-auto">로그아웃</a>
             </div>
           </div>
         </div>
+      </div>
+    </div>
+
+	<div class="card shadow-sm mt-5">
+      <div class="card-body">
+        <h5 class="fw-bold mb-3">내 활동</h5>
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item">
+            <a href="<%=ctx%>/mymatch.jsp" class="text-decoration-none text-dark d-flex justify-content-between align-items-center">
+              내 매칭
+              <span class="text-muted small">&gt;</span>
+            </a>
+          </li>
+          <li class="list-group-item">
+            <a href="<%=ctx%>/myPosts.jsp" class="text-decoration-none text-dark d-flex justify-content-between align-items-center">
+              내 게시글
+              <span class="text-muted small">&gt;</span>
+            </a>
+          </li>
+          <li class="list-group-item">
+            <a href="<%=ctx%>/myReviews.jsp" class="text-decoration-none text-dark d-flex justify-content-between align-items-center">
+              내 후기
+              <span class="text-muted small">&gt;</span>
+            </a>
+          </li>
+          <li class="list-group-item">
+            <a href="<%=ctx%>/myLikes.jsp" class="text-decoration-none text-dark d-flex justify-content-between align-items-center">
+              찜한 경기
+              <span class="text-muted small">&gt;</span>
+            </a>
+          </li>
+        </ul>
       </div>
     </div>
 

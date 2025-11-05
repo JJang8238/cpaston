@@ -1,35 +1,127 @@
-<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="true" %>
+<%@ page import="dto.User" %>
 <%
-    request.setCharacterEncoding("UTF-8");
+    // 로그인 체크
+    Object _loginObj = session.getAttribute("loginUser");
+    if (_loginObj == null) {
+        response.sendRedirect("index.jsp");
+        return;
+    }
 
-    String matchTitle = request.getParameter("matchTitle");
-    String rating = request.getParameter("rating");
-    String content = request.getParameter("content");
-    String writer = request.getParameter("writer");
+    User loginUser = null;
+    String displayName = null;
+
+    if (_loginObj instanceof User) {
+        loginUser = (User) _loginObj;
+        displayName = (loginUser.getName() != null && !loginUser.getName().isEmpty()) ? loginUser.getName() : "사용자";
+    } else {
+        displayName = String.valueOf(_loginObj);
+    }
+
+    String ctx = request.getContextPath();
 %>
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>리뷰 저장</title>
+    <title>리뷰 페이지</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="<%=ctx%>/css/styles.css" rel="stylesheet" />
 </head>
-<body class="bg-light">
-<div class="container mt-5">
-    <div class="card p-4 shadow-sm">
-        <h3 class="mb-3 text-primary fw-bold">리뷰 임시 저장 완료</h3>
-        <p>아래 내용이 정상적으로 전달되었습니다. (DB 연결 전이므로 실제 저장은 되지 않습니다.)</p>
-        <ul class="list-group">
-            <li class="list-group-item"><strong>경기명:</strong> <%= matchTitle %></li>
-            <li class="list-group-item"><strong>평점:</strong> <%= rating %>점</li>
-            <li class="list-group-item"><strong>작성자:</strong> <%= writer %></li>
-            <li class="list-group-item"><strong>리뷰 내용:</strong><br><%= content %></li>
-        </ul>
-        <div class="mt-4">
-            <a href="review.jsp" class="btn btn-secondary">리뷰 목록으로 돌아가기</a>
-            <a href="main.jsp" class="btn btn-primary">메인으로 가기</a>
+<body>
+
+<!-- ✅ 네비게이션 -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container px-5">
+        <a class="navbar-brand" href="<%=ctx%>/main.jsp">볼피또</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false"
+                aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <span class="nav-link disabled"><%= displayName %>님 환영합니다</span>
+                </li>
+                <li class="nav-item"><a class="nav-link" href="<%=ctx%>/main.jsp">홈</a></li>
+                <li class="nav-item"><a class="nav-link" href="<%=ctx%>/mypage.jsp">마이페이지</a></li>
+                <li class="nav-item"><a class="nav-link" href="<%=ctx%>/logout.jsp">로그아웃</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- ✅ 메인 컨텐츠 -->
+<div class="container mt-5 mb-5">
+    <h2 class="fw-bold mb-4 text-center">경기 리뷰 게시판</h2>
+
+    <!-- 📝 리뷰 작성 폼 -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white">리뷰 작성</div>
+        <div class="card-body">
+            <form action="saveReview.jsp" method="post">
+                <div class="mb-3">
+                    <label for="matchTitle" class="form-label">경기명</label>
+                    <input type="text" class="form-control" id="matchTitle" name="matchTitle" placeholder="예: 14:00 서울 풋살장 경기" required>
+                </div>
+                <div class="mb-3">
+                    <label for="rating" class="form-label">평점 (1~5)</label>
+                    <select class="form-select" id="rating" name="rating" required>
+                        <option value="">선택</option>
+                        <option value="5">★★★★★ (5점)</option>
+                        <option value="4">★★★★☆ (4점)</option>
+                        <option value="3">★★★☆☆ (3점)</option>
+                        <option value="2">★★☆☆☆ (2점)</option>
+                        <option value="1">★☆☆☆☆ (1점)</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="content" class="form-label">리뷰 내용</label>
+                    <textarea class="form-control" id="content" name="content" rows="4" placeholder="경기에 대한 후기를 자유롭게 작성해주세요." required></textarea>
+                </div>
+                <input type="hidden" name="writer" value="<%= displayName %>">
+                <button type="submit" class="btn btn-primary">등록</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 💬 리뷰 목록 -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-secondary text-white">리뷰 목록</div>
+        <div class="card-body">
+            <!-- ⚠️ 실제 DB 연결 전이므로 예시 데이터 -->
+            <div class="border-bottom pb-3 mb-3">
+                <h5>14:00 서울 풋살장 경기 <span class="text-warning">★★★★☆</span></h5>
+                <p>경기장이 깨끗하고 분위기 좋았어요! 팀원들도 매너가 좋아서 즐겁게 운동했습니다.</p>
+                <small class="text-muted">작성자: 홍길동 | 2025-11-05</small>
+            </div>
+
+            <div class="border-bottom pb-3 mb-3">
+                <h5>16:00 경기 <span class="text-warning">★★★☆☆</span></h5>
+                <p>경기는 재미있었지만 진행이 조금 늦어졌습니다. 그래도 전체적으로 만족!</p>
+                <small class="text-muted">작성자: 이영희 | 2025-11-04</small>
+            </div>
+
+            <div>
+                <h5>18:00 경기 <span class="text-warning">★★★★★</span></h5>
+                <p>정말 최고였습니다! 다음에도 꼭 참여할게요 😄</p>
+                <small class="text-muted">작성자: 박준호 | 2025-11-03</small>
+            </div>
         </div>
     </div>
 </div>
+
+<!-- ✅ Footer -->
+<footer class="py-4 bg-dark">
+    <div class="container text-center text-white">
+        <p class="m-0">Copyright &copy; 볼피또 2025</p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+

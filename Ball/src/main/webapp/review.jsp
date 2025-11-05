@@ -88,40 +88,7 @@
         </div>
     </div>
 
-    <!-- 💬 리뷰 목록 -->
-    <div class="card shadow-sm">
-        <div class="card-header bg-secondary text-white">리뷰 목록</div>
-        <div class="card-body">
-            <!-- ⚠️ 실제 DB 연결 전이므로 예시 데이터 -->
-            <div class="border-bottom pb-3 mb-3">
-                <h5>14:00 서울 풋살장 경기 <span class="text-warning">★★★★☆</span></h5>
-                <p>경기장이 깨끗하고 분위기 좋았어요! 팀원들도 매너가 좋아서 즐겁게 운동했습니다.</p>
-                <small class="text-muted">작성자: 홍길동 | 2025-11-05</small>
-            </div>
-
-            <div class="border-bottom pb-3 mb-3">
-                <h5>16:00 경기 <span class="text-warning">★★★☆☆</span></h5>
-                <p>경기는 재미있었지만 진행이 조금 늦어졌습니다. 그래도 전체적으로 만족!</p>
-                <small class="text-muted">작성자: 이영희 | 2025-11-04</small>
-            </div>
-
-            <div>
-                <h5>18:00 경기 <span class="text-warning">★★★★★</span></h5>
-                <p>정말 최고였습니다! 다음에도 꼭 참여할게요 😄</p>
-                <small class="text-muted">작성자: 박준호 | 2025-11-03</small>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ✅ Footer -->
-<footer class="py-4 bg-dark">
-    <div class="container text-center text-white">
-        <p class="m-0">Copyright &copy; 볼피또 2025</p>
-    </div>
-</footer>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+   
 </body>
 </html>
 

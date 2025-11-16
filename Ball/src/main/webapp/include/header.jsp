@@ -39,7 +39,7 @@
 
 <nav class="navbar navbar-expand-lg navbar-dark" style="background:#212529">
   <div class="container">
-    <a class="navbar-brand fw-bold" href="<%=ctxPath%>/main.jsp">플랩풋볼</a>
+    <a class="navbar-brand fw-bold" href="<%=ctxPath%>/main.jsp">볼삐또</a>
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNav"
             aria-controls="topNav" aria-expanded="false" aria-label="Toggle navigation">

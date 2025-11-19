@@ -1,49 +1,52 @@
 
 <%@ page contentType="text/html; charset=UTF-8" language="java" pageEncoding="UTF-8" session="true" %>
 <%@ page import="java.util.*, java.net.URLEncoder" %>
+<%@ page import="dao.MatchDAO, dto.Match" %>
+<%@ page import="dao.PostDAO, dto.Post" %>
+
 <%
     request.setCharacterEncoding("UTF-8");
     String ctx = request.getContextPath();
 
-    // 로그인 상태면 index.jsp 대신 main.jsp로 안내 (index는 손님용)
+    // 로그인 체크
     Object userObj = session.getAttribute("loginUser");
     String username = (String) session.getAttribute("username");
-    String name = (String) session.getAttribute("name");
-    boolean loggedIn = (userObj != null) || (username != null) || (name != null);
-    if (loggedIn) {
-        response.sendRedirect(ctx + "/main.jsp");
-        return;
-    }
+    boolean loggedIn = (userObj != null) || (username != null);
 
-    // 프리뷰 토글: v=matches | community
+    // ▼ 오늘 경기 5개만 표시
+    MatchDAO matchDAO = new MatchDAO();
+    List<Match> matchList = matchDAO.getTodayMatches();
+    if (matchList.size() > 5) matchList = matchList.subList(0, 5);
+
+    // 오늘 날짜
+    java.time.LocalDate today = java.time.LocalDate.now();
+    java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd (E)");
+    String todayStr = today.format(fmt);
+
+    // ▼ 선택된 카드 (matches / community / reviews)
     String v = request.getParameter("v");
     if (v == null) v = "matches";
-    boolean previewCommunity = "community".equalsIgnoreCase(v);
 
-    // 커뮤니티 데이터(응용: application 스코프의 POSTS 사용)
-    // 형식: Map<String, List<String>>  (카테고리 → 글제목 리스트)
-    Map<String, List<String>> POSTS = (Map<String, List<String>>) application.getAttribute("POSTS");
-    if (POSTS == null) {
-        POSTS = new LinkedHashMap<>();
-        POSTS.put("전체", new ArrayList<String>());
-        POSTS.put("인기글", new ArrayList<String>());
-        POSTS.put("동네질문", new ArrayList<String>());
-        application.setAttribute("POSTS", POSTS);
+    // 버튼 스타일 토글
+    String btnMatches = v.equals("matches")   ? "btn-primary" : "btn-outline-primary";
+    String btnComm    = v.equals("community") ? "btn-primary" : "btn-outline-primary";
+    String btnReview  = v.equals("reviews")   ? "btn-primary" : "btn-outline-primary";
+
+    // ▼ 커뮤니티 최신 4개 (PostDAO 사용, post 테이블에서 가져옴)
+    List<Post> previewPosts;
+    try (PostDAO pdao = new PostDAO()) {
+        // 전체 글에서 최신순으로 가져오고, 4개만 잘라 사용
+        previewPosts = pdao.list("전체");
+    }
+    if (previewPosts == null) {
+        previewPosts = new ArrayList<>();
+    }
+    if (previewPosts.size() > 4) {
+        previewPosts = previewPosts.subList(0, 4);
     }
 
-    // 커뮤니티 미리보기: 최대 4개 (전체 카테고리에서 합침)
-    List<String> merged = new ArrayList<>();
-    LinkedHashSet<String> uniq = new LinkedHashSet<>();
-    for (Map.Entry<String, List<String>> e : POSTS.entrySet()) {
-        List<String> lst = e.getValue();
-        if (lst != null) uniq.addAll(lst);
-    }
-    merged.addAll(uniq);
-    if (merged.size() > 4) merged = merged.subList(0, 4);
-
-    // 로그인 리다이렉트 링크(상세 보려면 로그인 유도)
-    String redirectCommunity = ctx + "/community.jsp";
-    String loginForCommunity = ctx + "/login.jsp?redirect=" + URLEncoder.encode("community.jsp", "UTF-8");
+    // 로그인 유도 URL (리뷰용)
+    String loginForReview = ctx + "/login.jsp?redirect=" + URLEncoder.encode("reviews.jsp", "UTF-8");
 %>
 
 <!DOCTYPE html>
@@ -51,159 +54,150 @@
 <head>
     <meta charset="utf-8" />
 
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>볼피또</title>
-    <link rel="icon" type="image/x-icon" href="<%=ctx%>/assets/favicon.ico" />
     <link href="<%=ctx%>/css/styles.css" rel="stylesheet" />
     <style>
         .preview-card .list-group-item { display:flex; justify-content:space-between; align-items:center; }
-        .preview-card .badge { min-width:72px; text-align:center; }
         .section-muted { color:#6c757d; }
     </style>
 </head>
 <body>
-<!-- 게스트 네비게이션 -->
+
+<!-- NAV -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container px-5">
         <a class="navbar-brand" href="<%=ctx%>/index.jsp">볼피또</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div id="nav" class="collapse navbar-collapse">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link active" href="<%=ctx%>/index.jsp">Home</a></li>
-                <li class="nav-item"><a class="nav-link" href="<%=ctx%>/login.jsp">로그인</a></li>
-                <li class="nav-item"><a class="nav-link" href="<%=ctx%>/register.jsp">회원가입</a></li>
-            </ul>
-        </div>
+        <ul class="navbar-nav ms-auto">
+            <li class="nav-item"><a class="nav-link active" href="<%=ctx%>/index.jsp">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="<%=ctx%>/login.jsp">로그인</a></li>
+            <li class="nav-item"><a class="nav-link" href="<%=ctx%>/register.jsp">회원가입</a></li>
+        </ul>
     </div>
 </nav>
 
-<!-- 히어로 -->
+<!-- HERO -->
 <div class="container px-4 px-lg-5">
+
     <div class="row gx-4 gx-lg-5 align-items-center my-5">
         <div class="col-lg-7">
-            <img class="img-fluid rounded mb-4 mb-lg-0" src="<%=ctx%>/assets/img/football.png" alt="플랩풋볼 이미지" />
+            <img class="img-fluid rounded mb-4 mb-lg-0" src="<%=ctx%>/assets/img/football.png" />
         </div>
         <div class="col-lg-5">
             <h1 class="fw-bold">우리의 운동 플랫폼</h1>
-            <p class="text-muted">이 사이트는 경기 매칭 기능을 중심으로 제공합니다.</p>
+            <p class="text-muted">경기 매칭 중심 서비스입니다.</p>
             <a class="btn btn-primary" href="<%=ctx%>/register.jsp">지금 참여하기</a>
         </div>
     </div>
 
-    <!-- 안내 -->
-    <div class="my-5 p-3 bg-secondary text-white text-center rounded">
-        심한 욕설, 불법 행위 등을 금지합니다.
-    </div>
-
-    <!-- 서비스 카드 -->
+    <!-- 기능 카드 -->
     <div class="row text-center mb-4">
-        <!-- 경기 매칭: 버튼을 누르면 하단 프리뷰가 '경기'로 전환 -->
+
+        <!-- 경기 매칭 -->
         <div class="col-md-4">
             <div class="card h-100 shadow-sm">
                 <div class="card-body">
-                    <h3 class="mb-2">경기 매칭</h3>
-                    <p class="text-muted">경기를 뛰고 싶을 때! 원하는 지역에서 매칭을 손쉽게!</p>
-                    <a href="<%=ctx%>/index.jsp?v=matches#preview"
-                       class="btn btn-primary">자세히 보기</a>
+                    <h3>경기 매칭</h3>
+                    <p class="text-muted">원하는 지역에서 경기를 즐겨보세요.</p>
+                    <a href="<%=ctx%>/index.jsp?v=matches#preview" class="btn <%=btnMatches%>">자세히 보기</a>
                 </div>
             </div>
         </div>
-        <!-- 커뮤니티: 버튼을 누르면 하단 프리뷰가 '커뮤니티'로 전환 -->
-        <div class="col-md-4 mt-4 mt-md-0">
+
+        <!-- 커뮤니티 -->
+        <div class="col-md-4 mt-3 mt-md-0">
             <div class="card h-100 shadow-sm">
                 <div class="card-body">
-                    <h3 class="mb-2">커뮤니티</h3>
-                    <p class="text-muted">같은 관심사를 가진 사람들과 소통하거나 모임을 만들어요.</p>
-                    <a href="<%=ctx%>/index.jsp?v=community#preview"
-                       class="btn btn-outline-primary">자세히 보기</a>
+                    <h3>커뮤니티</h3>
+                    <p class="text-muted">자유롭게 소통하고 정보를 나눠보세요.</p>
+                    <a href="<%=ctx%>/index.jsp?v=community#preview" class="btn <%=btnComm%>">자세히 보기</a>
                 </div>
             </div>
         </div>
-        <!-- 리뷰: 미리보기 대신 로그인 유도(원하면 같은 방식으로 프리뷰 추가 가능) -->
-        <div class="col-md-4 mt-4 mt-md-0">
+
+        <!-- 리뷰 -->
+        <div class="col-md-4 mt-3 mt-md-0">
             <div class="card h-100 shadow-sm">
                 <div class="card-body">
-                    <h3 class="mb-2">리뷰</h3>
-                    <p class="text-muted">참여했던 경기/모임에 대해 자유롭게 리뷰하고 평가해요.</p>
-                    <a href="<%=ctx%>/login.jsp?redirect=<%=URLEncoder.encode("reviews.jsp","UTF-8")%>"
-                       class="btn btn-outline-primary">자세히 보기</a>
+                    <h3>리뷰</h3>
+                    <p class="text-muted">경기 참여 후 솔직한 리뷰를 남겨보세요.</p>
+                    <a href="<%=ctx%>/index.jsp?v=reviews#preview" class="btn <%=btnReview%>">자세히 보기</a>
                 </div>
             </div>
         </div>
+
     </div>
 
-    <!-- ▼ 프리뷰 영역: v 파라미터에 따라 토글 -->
+    <!-- ▼ 프리뷰 -->
     <div id="preview" class="preview-card mb-5">
-        <% if (!previewCommunity) { %>
-            <!-- 오늘의 경기 예약 현황 (게스트용 간략 미리보기: 데모 데이터) -->
-            <h2 class="fw-bold mb-3">오늘의 경기 예약 현황</h2>
-            <div class="list-group shadow-sm">
-                <a class="list-group-item list-group-item-action">
+
+    <%-- ---------------------- 경기 매칭 PREVIEW ---------------------- --%>
+    <% if ("matches".equals(v)) { %>
+
+        <h2 class="fw-bold mb-1">오늘의 경기 예약 현황</h2>
+        <p class="text-muted"><%=todayStr%></p>
+
+        <div class="list-group shadow-sm">
+        <% if (matchList.isEmpty()) { %>
+            <div class="alert alert-info">오늘은 등록된 경기가 없습니다.</div>
+        <% } else {
+            for (Match m : matchList) { %>
+                <div class="list-group-item list-group-item-action">
                     <div>
-                        <div class="h5 mb-1">12:00 경기</div>
-                        <small class="section-muted">서울 풋살장 | 인원: 10 / 18</small>
-                    </div>
-                    <span class="badge bg-danger rounded-pill">경기 취소</span>
-                </a>
-                <a class="list-group-item list-group-item-action">
-                    <div>
-                        <div class="h5 mb-1">14:00 경기</div>
-                        <small class="section-muted">서울 풋살장 | 인원: 15 / 18</small>
-                    </div>
-                    <span class="badge bg-success rounded-pill">예약중</span>
-                </a>
-                <a class="list-group-item list-group-item-action">
-                    <div>
-                        <div class="h5 mb-1">16:00 경기</div>
-                        <small class="section-muted">서울 풋살장 | 인원: 18 / 18</small>
+                        <div class="h5 mb-1"><%= m.getMatchTime() %> 경기</div>
+                        <small class="section-muted">
+                            <%= m.getLocation() %> | 인원: <%= m.getCurrentPlayers() %> / <%= m.getMaxPlayers() %>
+                        </small>
                     </div>
                     <span class="badge bg-success rounded-pill">예약중</span>
-                </a>
-                <a class="list-group-item list-group-item-action">
-                    <div>
-                        <div class="h5 mb-1">18:00 경기</div>
-                        <small class="section-muted">서울 풋살장 | 인원: 8 / 18</small>
-                    </div>
-                    <span class="badge bg-danger rounded-pill">경기 취소</span>
-                </a>
+                </div>
+        <% } } %>
+        </div>
+
+    <%-- ---------------------- 커뮤니티 PREVIEW ---------------------- --%>
+    <% } else if ("community".equals(v)) { %>
+
+        <h2 class="fw-bold mb-3">커뮤니티 미리보기</h2>
+
+        <% if (previewPosts.isEmpty()) { %>
+            <div class="alert alert-info">등록된 게시글이 없습니다.</div>
+        <% } else { %>
+
+            <div class="list-group shadow-sm mb-3">
+            <%
+                java.text.SimpleDateFormat df = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm");
+                for (Post p : previewPosts) {
+                    String title = (p.getTitle() == null ? "" : p.getTitle())
+                                   .replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
+                                   .replace("\"","&quot;").replace("'","&#39;");
+                    String dateStr = (p.getCreatedAt() == null) ? "" : df.format(p.getCreatedAt());
+            %>
+                <div class="list-group-item d-flex justify-content-between">
+                    <span><%= title %> (작성자: <%= p.getAuthor() %>, <%= dateStr %>)</span>
+                    <a class="btn btn-outline-secondary btn-sm" href="<%=ctx%>/login.jsp">자세히</a>
+                </div>
+            <% } %>
+            </div>
+
+        <% } %>
+
+    <%-- ---------------------- 리뷰 PREVIEW ---------------------- --%>
+    <% } else if ("reviews".equals(v)) { %>
+
+        <h2 class="fw-bold mb-3">리뷰 미리보기</h2>
+
+        <% if (!loggedIn) { %>
+            <div class="alert alert-warning">
+                리뷰는 로그인 후 이용 가능합니다.
+                <a href="<%=loginForReview%>" class="btn btn-primary btn-sm ms-2">로그인</a>
             </div>
         <% } else { %>
-            <!-- 커뮤니티 미리보기 (최대 4개 타이틀)  -->
-            <h2 class="fw-bold mb-3">커뮤니티 미리보기</h2>
-            <% if (merged.isEmpty()) { %>
-                <div class="alert alert-info">아직 등록된 게시글이 없습니다.</div>
-                <a href="<%=loginForCommunity%>" class="btn btn-primary">첫 글 작성하기 (로그인)</a>
-            <% } else { %>
-                <div class="list-group shadow-sm mb-3">
-                    <% for (String t : merged) {
-                           String safeTitle = t == null ? "" :
-                               t.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
-                                .replace("\"","&quot;").replace("'","&#39;");
-                    %>
-                        <div class="list-group-item d-flex justify-content-between align-items-center">
-                            <span class="text-truncate" style="max-width:85%"><%=safeTitle%></span>
-                            <a class="btn btn-sm btn-outline-secondary"
-                               href="<%=loginForCommunity%>">자세히</a>
-                        </div>
-                    <% } %>
-                </div>
-                <a href="<%=loginForCommunity%>" class="btn btn-outline-primary">커뮤니티 더 보기 (로그인)</a>
-            <% } %>
+            <div class="alert alert-info">리뷰 페이지에서 자세한 내용을 확인할 수 있습니다.</div>
         <% } %>
+
+    <% } %>
+
     </div>
-    <!-- ▲ 프리뷰 영역 끝 -->
 
 </div>
-
-<footer class="py-5 bg-dark">
-    <div class="container px-4 px-lg-5">
-        <p class="m-0 text-center text-white">Copyright &copy; 볼피또 2025</p>
-    </div>
-</footer>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="<%=ctx%>/js/scripts.js"></script>
 </body>
 </html>

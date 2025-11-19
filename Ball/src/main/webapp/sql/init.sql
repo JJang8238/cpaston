@@ -10,6 +10,7 @@ CREATE TABLE `user` (
   role           VARCHAR(20)  NOT NULL DEFAULT 'student',
   email          VARCHAR(255) UNIQUE,
   email_verified TINYINT(1)   NOT NULL DEFAULT 0
+  profile_image VARCHAR(255) NULL
 );
 
 CREATE TABLE email_verification (
@@ -171,3 +172,4 @@ VALUES
 ('2025-11-19', '18:00:00', '양주시유소년축구클럽', 0, 18, '예약중'),
 ('2025-11-19', '20:00:00', '양주시유소년축구클럽', 0, 18, '예약중'),
 ('2025-11-19', '22:00:00', '양주시유소년축구클럽', 0, 18, '예약중');
+

@@ -52,6 +52,8 @@ public class User implements Serializable {
     
     public String getProfileImage() { return profileImage; }
     public void setProfileImage(String profileImage) { this.profileImage = profileImage; }
+    
+
 
     // --- 편의 메서드 ---
     /** 인증 여부를 boolean 으로 바로 확인 */

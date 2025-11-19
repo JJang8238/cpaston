@@ -94,7 +94,7 @@
     <div class="container">
         <h2>나의 계정</h2>
 
-        <form action="updateProfile.jsp" method="post" enctype="multipart/form-data">
+        <form action="updateProfile" method="post" enctype="multipart/form-data">
             <!-- 프로필 이미지 -->
             <img src="<%= user.getProfileImage() != null ? "uploads/" + user.getProfileImage() : "default-profile.png" %>" 
                  alt="프로필 이미지" class="profile-image">

@@ -87,6 +87,7 @@ public class UserDAO implements AutoCloseable {
                     try { user.setRole(rs.getString("role")); } catch (SQLException ignore) {}
                     try { user.setEmail(rs.getString("email")); } catch (SQLException ignore) {}
                     try { user.setEmailVerified(rs.getInt("email_verified")); } catch (SQLException ignore) {}
+                    try { user.setProfileImage(rs.getString("profile_image")); } catch (SQLException ignore) {}
                     return user;
                 }
             }
@@ -179,6 +180,7 @@ public class UserDAO implements AutoCloseable {
         try { user.setRole(rs.getString("role")); } catch (SQLException ignore) {}
         try { user.setEmail(rs.getString("email")); } catch (SQLException ignore) {}
         try { user.setEmailVerified(rs.getInt("email_verified")); } catch (SQLException ignore) {}
+        try { user.setProfileImage(rs.getString("profile_image")); } catch (SQLException ignore) {}
         return user;
     }
 

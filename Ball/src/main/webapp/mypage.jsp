@@ -30,8 +30,8 @@
     String fEmail    = loginUser.getEmail();
     String fRole     = loginUser.getRole();
     String fProfile  = (loginUser.getProfileImage() != null && !loginUser.getProfileImage().isEmpty())
-                        ? loginUser.getProfileImage()
-                        : ctx + "/assets/img/profile-default.png";
+            ? ctx + "/uploads/" + loginUser.getProfileImage()
+            : ctx + "/assets/img/profile-default.png";
 
     /* --------------------------- 내가 쓴 게시글 --------------------------- */
     List<Post> myPosts = new ArrayList<>();

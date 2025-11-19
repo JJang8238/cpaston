@@ -90,9 +90,6 @@ CREATE TABLE IF NOT EXISTS post (
   updated_at   TIMESTAMP     NULL ON UPDATE CURRENT_TIMESTAMP
 );
 
-ALTER TABLE matches
-  ADD COLUMN region VARCHAR(50) NOT NULL DEFAULT '전체';
-
   SELECT id, username, name, email_verified
 FROM `user`
 WHERE email = 'jjang761213@naver.com';
@@ -112,16 +109,6 @@ WHERE email = 'jjang761213@naver.com';
 ALTER TABLE match_reservations
 ADD COLUMN match_status VARCHAR(20) DEFAULT '예약중';
 
-INSERT INTO match_reservations (match_date, match_time, location, current_players, max_players, match_status)
-VALUES 
-(CURDATE(), '10:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
-(CURDATE(), '12:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
-(CURDATE(), '14:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
-(CURDATE(), '16:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
-(CURDATE(), '18:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
-(CURDATE(), '20:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
-(CURDATE(), '22:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
-(CURDATE(), '00:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중');
 
 SELECT * FROM match_reservations WHERE match_date = CURDATE();
 
@@ -173,3 +160,13 @@ CREATE TABLE community_posts (
 );
 
 DESC community_posts;
+
+INSERT INTO match_reservations (match_date, match_time, location, current_players, max_players, match_status)
+VALUES 
+('2025-11-19', '10:00:00', '양주시유소년축구클럽', 0, 18, '예약중'),
+('2025-11-19', '12:00:00', '양주시유소년축구클럽', 0, 18, '예약중'),
+('2025-11-19', '14:00:00', '양주시유소년축구클럽', 0, 18, '예약중'),
+('2025-11-19', '16:00:00', '양주시유소년축구클럽', 0, 18, '예약중'),
+('2025-11-19', '18:00:00', '양주시유소년축구클럽', 0, 18, '예약중'),
+('2025-11-19', '20:00:00', '양주시유소년축구클럽', 0, 18, '예약중'),
+('2025-11-19', '22:00:00', '양주시유소년축구클럽', 0, 18, '예약중');

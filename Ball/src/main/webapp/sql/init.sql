@@ -96,5 +96,83 @@ CREATE TABLE IF NOT EXISTS post (
 >>>>>>> b972762a2b7dc89ab6d1c2de53c90cca833a1411
 >>>>>>> 9c9a1dc922adba8981c83f10994b0143e362e30b
 
-ALTER TABLE matches
-  ADD COLUMN region VARCHAR(50) NOT NULL DEFAULT '전체';
+  SELECT id, username, name, email_verified
+FROM `user`
+WHERE email = 'jjang761213@naver.com';
+
+-- 1) 기존 계정의 email 비우기(또는 다른 주소로 변경)
+UPDATE `user`
+SET email = NULL, email_verified = 0
+WHERE email = 'jjang761213@naver.com';
+
+-- 2) 인증 테이블 정리(해당 이메일의 PK/고유 레코드 제거)
+DELETE FROM email_verification
+WHERE email = 'jjang761213@naver.com';
+
+-- 3) 이제 새 계정에서 같은 이메일로 가입 → 인증 로직 정상 작동
+
+-- 4) 데모용 경기
+ALTER TABLE match_reservations
+ADD COLUMN match_status VARCHAR(20) DEFAULT '예약중';
+
+
+SELECT * FROM match_reservations WHERE match_date = CURDATE();
+
+DESC match_reservations;
+
+DESCRIBE match_reservations;
+
+SELECT * FROM match_reservations;
+
+commit;
+INSERT INTO match_reservations (match_date, match_time, location, current_players, max_players, match_status)
+VALUES 
+('2025-11-16', '10:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
+('2025-11-16', '12:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
+('2025-11-16', '14:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
+('2025-11-16', '16:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
+('2025-11-16', '18:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
+('2025-11-16', '20:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
+('2025-11-16', '22:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
+('2025-11-16', '00:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중');
+
+INSERT INTO match_reservations (match_date, match_time, location, current_players, max_players, match_status)
+VALUES 
+('2025-11-17', '10:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
+('2025-11-17', '12:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
+('2025-11-17', '14:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
+('2025-11-17', '16:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
+('2025-11-17', '18:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
+('2025-11-17', '20:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
+('2025-11-17', '22:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
+('2025-11-17', '00:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중');
+
+DELETE FROM match_reservations;
+
+SELECT * FROM match_reservations;
+SELECT * FROM reservations;
+
+SHOW TABLES;
+SELECT * FROM user;
+
+SELECT * FROM community_posts;
+
+CREATE TABLE community_posts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255),
+    writer VARCHAR(100),
+    content TEXT,
+    regdate VARCHAR(20)
+);
+
+DESC community_posts;
+
+INSERT INTO match_reservations (match_date, match_time, location, current_players, max_players, match_status)
+VALUES 
+('2025-11-19', '10:00:00', '양주시유소년축구클럽', 0, 18, '예약중'),
+('2025-11-19', '12:00:00', '양주시유소년축구클럽', 0, 18, '예약중'),
+('2025-11-19', '14:00:00', '양주시유소년축구클럽', 0, 18, '예약중'),
+('2025-11-19', '16:00:00', '양주시유소년축구클럽', 0, 18, '예약중'),
+('2025-11-19', '18:00:00', '양주시유소년축구클럽', 0, 18, '예약중'),
+('2025-11-19', '20:00:00', '양주시유소년축구클럽', 0, 18, '예약중'),
+('2025-11-19', '22:00:00', '양주시유소년축구클럽', 0, 18, '예약중');

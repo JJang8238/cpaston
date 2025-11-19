@@ -22,7 +22,7 @@
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
   <div class="container">
-    <a class="navbar-brand" href="<%=ctx%>/index.jsp">플랩풋볼</a>
+    <a class="navbar-brand" href="<%=ctx%>/index.jsp">볼삐또</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -38,10 +38,6 @@
 
 <div class="container py-5">
   <h2 class="mb-4 fw-bold">회원가입</h2>
-
-  <div class="alert alert-warning form-card mx-auto">
-    이메일 인증을 완료해야 가입폼이 활성화됩니다. (코드는 10분간 유효)
-  </div>
 
   <!-- 이메일 인증 -->
   <div class="card shadow-sm form-card mx-auto mb-4">

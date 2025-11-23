@@ -9,7 +9,7 @@ CREATE TABLE `user` (
   name           VARCHAR(100) NOT NULL,
   role           VARCHAR(20)  NOT NULL DEFAULT 'student',
   email          VARCHAR(255) UNIQUE,
-  email_verified TINYINT(1)   NOT NULL DEFAULT 0
+  email_verified TINYINT(1)   NOT NULL DEFAULT 0,
   profile_image VARCHAR(255) NULL
 );
 

@@ -12,6 +12,9 @@ CREATE TABLE `user` (
   email_verified TINYINT(1)   NOT NULL DEFAULT 0
 );
 
+ALTER TABLE user
+ADD COLUMN profile_image VARCHAR(255) NULL;
+
 CREATE TABLE email_verification (
   email       VARCHAR(255) NOT NULL PRIMARY KEY,
   code        VARCHAR(6)   NOT NULL,
@@ -170,3 +173,16 @@ VALUES
 ('2025-11-19', '18:00:00', '양주시유소년축구클럽', 0, 18, '예약중'),
 ('2025-11-19', '20:00:00', '양주시유소년축구클럽', 0, 18, '예약중'),
 ('2025-11-19', '22:00:00', '양주시유소년축구클럽', 0, 18, '예약중');
+
+INSERT INTO user (username, password, name, email, email_verified, role, profile_image)
+VALUES (
+    'test13',                                                   -- 아이디
+    SHA2('1234', 256),                                          -- 비밀번호(평문 X)
+    '김뽀삐',                                                    -- 이름
+    'lejjsh1213@gmail.com',                                         -- 이메일
+    1,                                                          -- 이메일 인증됨(1) 처리
+    'student',                                                  -- 권한
+    'default-profile.png'                                       -- 기본 이미지
+);
+
+DESC matches;

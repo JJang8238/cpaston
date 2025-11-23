@@ -13,9 +13,11 @@ import java.io.IOException;
 
 @WebServlet("/updateProfile")
 @MultipartConfig(
-        fileSizeThreshold = 1024 * 1024,
-        maxFileSize = 1024 * 1024 * 10,
-        maxRequestSize = 1024 * 1024 * 50
+
+        fileSizeThreshold = 1024 * 1024,        // 1MB 메모리 임계값
+        maxFileSize = 1024 * 1024 * 10,        // 파일 10MB
+        maxRequestSize = 1024 * 1024 * 50      // 요청 전체 50MB
+
 )
 public class UpdateProfileServlet extends HttpServlet {
 

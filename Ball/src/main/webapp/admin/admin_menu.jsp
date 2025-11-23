@@ -69,8 +69,8 @@
         <a href="<%=ctx%>/admin/admin_menu.jsp?page=match">경기 관리</a>
         <a href="<%=ctx%>/admin/admin_menu.jsp?page=review">리뷰 관리</a>
         <a href="<%=ctx%>/admin/admin_menu.jsp?page=report">신고 처리</a>
-        <a href="<%=ctx%>/admin/admin_menu.jsp?page=stats">플랫폼 통계</a>
-        <a href="<%=ctx%>/admin/admin_menu.jsp?page=system">시스템 설정</a>
+
+        <a href="<%=ctx%>/admin/admin_menu.jsp?page=stats">커뮤니티 관리</a>
         <hr>
         <a href="<%=ctx%>/admin/admin_main.jsp">사용자 홈</a>
         <a href="<%=ctx%>/logout.jsp">로그아웃</a>
@@ -98,13 +98,6 @@
 
             <jsp:include page="pages/report_manage.jsp" />
 
-        <% } else if ("stats".equals(pageParam)) { %>
-
-            <jsp:include page="pages/statistics.jsp" />
-
-        <% } else if ("system".equals(pageParam)) { %>
-
-            <jsp:include page="pages/system_settings.jsp" />
 
         <% } else { %>
 

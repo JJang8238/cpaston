@@ -94,6 +94,8 @@
     <div class="container">
         <h2>나의 계정</h2>
 
+
+        <!-- 🔥 반드시 서블릿으로 요청해야 함 -->
         <form action="updateProfile" method="post" enctype="multipart/form-data">
             <!-- 프로필 이미지 -->
             <img src="<%= user.getProfileImage() != null ? "uploads/" + user.getProfileImage() : "default-profile.png" %>" 

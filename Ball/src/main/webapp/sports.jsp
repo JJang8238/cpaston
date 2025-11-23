@@ -65,16 +65,16 @@
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container px-5">
-        <a class="navbar-brand" href="/Ball/main.jsp">볼피또</a>
+        <a class="navbar-brand" href="<%=request.getContextPath()%>/main.jsp">볼피또</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                 data-bs-target="#navbarSupportedContent">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                <li class="nav-item"><a class="nav-link" href="/Ball/main.jsp">홈</a></li>
-                <li class="nav-item"><a class="nav-link" href="/Ball/mypage.jsp">마이페이지</a></li>
-                <li class="nav-item"><a class="nav-link" href="/Ball/logout.jsp">로그아웃</a></li>
+                <li class="nav-item"><a class="nav-link" href="<%=request.getContextPath()%>/main.jsp">홈</a></li>
+                <li class="nav-item"><a class="nav-link" href="<%=request.getContextPath()%>/mypage.jsp">마이페이지</a></li>
+                <li class="nav-item"><a class="nav-link" href="<%=request.getContextPath()%>/logout.jsp">로그아웃</a></li>
             </ul>
         </div>
     </div>
@@ -102,7 +102,7 @@
     </div>
 </div>
 
-<!-- 리뷰 패널 (리뷰 작성 영역 없음 / 조회만) -->
+<!-- 리뷰 패널 -->
 <aside id="reviewPanel">
     <button class="btn btn-sm btn-outline-secondary close-btn" onclick="hideReviewPanel()">닫기</button>
 
@@ -111,13 +111,12 @@
     <div class="card mb-3">
         <div class="card-body">
 
-            <img id="rvPlaceImage" src="/Ball/assets/img/field-default.jpg"
+            <img id="rvPlaceImage"
+                 src="<%=request.getContextPath()%>/assets/img/field-default.png"
                  class="img-fluid rounded mb-3"
                  style="width:100%; height:160px; object-fit:cover;">
 
-            <div class="text-muted small mb-2">
-                주변 이용자들이 남긴 리뷰를 확인해 보세요.
-            </div>
+            <div class="text-muted small mb-2">주변 이용자들이 남긴 리뷰를 확인해 보세요.</div>
 
             <div class="mb-2">
                 <span style="font-size:20px; color:#FFC107;">★</span>
@@ -144,18 +143,13 @@
     </div>
 </aside>
 
-
 <script>
 let kakaoMap, kakaoPlaces, userMarker, radiusCircle;
 let userCenter = null;
 let markers = [];
 let currentPlaceName = null;
 
-// 🔹 마커 이미지(색 다른 SVG)를 담아둘 전역 변수
-let userMarkerImage = null;
-let placeMarkerImage = null;
-
-/* 날짜 기본값 = 오늘 */
+// 날짜 기본값 = 오늘
 document.addEventListener("DOMContentLoaded", function() {
     const today = new Date().toISOString().split("T")[0];
     document.getElementById("matchDate").value = today;
@@ -183,18 +177,16 @@ function createMap(lat, lng) {
 
     kakaoPlaces = new kakao.maps.services.Places();
 
-    // 🔹 SVG 기반 마커 이미지 생성(이미지 파일 업로드 없이 색만 다른 마커)
+    // 지도 마커 SVG
     const markerSize   = new kakao.maps.Size(24, 35);
     const markerOffset = new kakao.maps.Point(12, 35);
 
-    // 내 위치(파란색)
     const USER_MARKER_SVG =
         'data:image/svg+xml;charset=UTF-8,' +
         '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="35" viewBox="0 0 24 35">' +
         '<path fill="%23007bff" d="M12 0C6.5 0 2 4.5 2 10c0 7.5 10 15 10 25 0-10 10-17.5 10-25C22 4.5 17.5 0 12 0z"/>' +
         '<circle cx="12" cy="10" r="4" fill="%23ffffff"/></svg>';
 
-    // 풋살장(초록색)
     const PLACE_MARKER_SVG =
         'data:image/svg+xml;charset=UTF-8,' +
         '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="35" viewBox="0 0 24 35">' +
@@ -208,7 +200,15 @@ function createMap(lat, lng) {
     searchAround();
 
     document.getElementById("btnRelocate").onclick = relocateToMe;
-    document.getElementById("btnSearch").onclick = searchAround;
+
+    /* 🔥🔥 여기 수정됨 — “이 위치에서 검색” 버튼 */
+    document.getElementById("btnSearch").onclick = () => {
+        const c = kakaoMap.getCenter();        // 지도 중심 좌표 읽기
+        userCenter = { lat: c.getLat(), lng: c.getLng() };
+        drawUserSpot();                        // 내 위치 마커 재설정
+        searchAround();                        // 주변 다시 검색
+    };
+
     document.getElementById("selRadius").onchange = () => {
         drawRadius();
         searchAround();
@@ -221,7 +221,7 @@ function drawUserSpot() {
     userMarker = new kakao.maps.Marker({
         position:new kakao.maps.LatLng(userCenter.lat, userCenter.lng),
         map:kakaoMap,
-        image:userMarkerImage   // 🔹 파란색 마커
+        image:userMarkerImage
     });
 
     drawRadius();
@@ -275,7 +275,7 @@ function addPlace(place) {
     const marker = new kakao.maps.Marker({
         position:new kakao.maps.LatLng(lat, lng),
         map:kakaoMap,
-        image:placeMarkerImage   // 🔹 초록색 마커
+        image:placeMarkerImage
     });
 
     markers.push(marker);
@@ -283,30 +283,38 @@ function addPlace(place) {
     const li = document.createElement("li");
     li.className = "list-group-item list-group-item-action";
     li.textContent = place.place_name;
-    li.onclick = () => openReviewPanel(place.place_name);
+    li.onclick = () => openReviewPanel(place);
 
     document.getElementById("placesList").appendChild(li);
 
     kakao.maps.event.addListener(marker, "click", () => {
-        openReviewPanel(place.place_name);
+        openReviewPanel(place);
     });
 }
 
-function openReviewPanel(placeName) {
+function openReviewPanel(place) {
+    const placeName = place.place_name;
     currentPlaceName = placeName;
+
     document.getElementById("rvPlaceTitle").textContent = placeName;
     document.getElementById("reviewPanel").style.display = "block";
+
+    const safeName = placeName.replace(/\s+/g, "");
+    const img = document.getElementById("rvPlaceImage");
+    img.src = "<%=request.getContextPath()%>/assets/img/" + safeName + ".png";
+
+    img.onerror = function () {
+        this.src = "<%=request.getContextPath()%>/assets/img/field-default.png";
+    };
 
     loadReviews(placeName);
     loadMatches(placeName);
 }
 
-/* 리뷰 불러오기 */
 function loadReviews(placeName) {
-    fetch("/Ball/review?action=listByPlace&place=" + encodeURIComponent(placeName))
+    fetch("<%=request.getContextPath()%>/review?action=listByPlace&place=" + encodeURIComponent(placeName))
         .then(res => res.json())
         .then(data => {
-
             document.getElementById("rvAvgRating").textContent =
                 Number(data.avgRating || 0).toFixed(1);
             document.getElementById("rvReviewCount").textContent = data.count;
@@ -366,15 +374,13 @@ function collapseReviews() {
     box.innerHTML = renderReviewItems(list.slice(0,5));
 }
 
-/* 경기 일정 */
 function loadMatches(placeName) {
     const date = document.getElementById("matchDate").value;
 
-    fetch("/Ball/reserve?action=matchesByPlace&place=" +
+    fetch("<%=request.getContextPath()%>/reserve?action=matchesByPlace&place=" +
         encodeURIComponent(placeName) + "&date=" + date)
         .then(res => res.json())
         .then(list => {
-
             const box = document.getElementById("rvMatches");
 
             if (!list || list.length === 0) {
@@ -389,19 +395,15 @@ function loadMatches(placeName) {
                 "value='" + date + "' onchange='loadMatches(currentPlaceName)'>";
 
             list.forEach(m => {
-
                 let btn = "";
 
                 if (m.canceled) {
                     btn = "<span class='badge bg-danger ms-2'>취소됨</span>";
-                }
-                else if (m.joined) {
+                } else if (m.joined) {
                     btn = "<button class='btn btn-sm btn-outline-danger ms-2' onclick='cancelReserve(" + m.id + ")'>취소하기</button>";
-                }
-                else if (m.current >= m.max) {
+                } else if (m.current >= m.max) {
                     btn = "<span class='badge bg-secondary ms-2'>마감</span>";
-                }
-                else {
+                } else {
                     btn = "<button class='btn btn-sm btn-primary ms-2' onclick='reserveMatch(" + m.id + ")'>예약하기</button>";
                 }
 
@@ -421,7 +423,7 @@ function reserveMatch(matchId) {
     params.append("action","book");
     params.append("matchId",matchId);
 
-    fetch("/Ball/reserve", {
+    fetch("<%=request.getContextPath()%>/reserve", {
         method:"POST",
         body:params
     })
@@ -430,8 +432,9 @@ function reserveMatch(matchId) {
         if(data.ok){
             alert("예약 완료!");
             loadMatches(currentPlaceName);
+        } else {
+            alert("예약 실패");
         }
-        else alert("예약 실패");
     });
 }
 
@@ -440,7 +443,7 @@ function cancelReserve(matchId) {
     params.append("action","cancel");
     params.append("matchId",matchId);
 
-    fetch("/Ball/reserve", {
+    fetch("<%=request.getContextPath()%>/reserve", {
         method:"POST",
         body:params
     })
@@ -449,8 +452,9 @@ function cancelReserve(matchId) {
         if(data.ok){
             alert("예약 취소!");
             loadMatches(currentPlaceName);
+        } else {
+            alert("취소 실패");
         }
-        else alert("취소 실패");
     });
 }
 

@@ -5,11 +5,18 @@
     // 로그인 체크
     Object obj = session.getAttribute("loginUser");
     if (obj == null) {
-        response.sendRedirect("index.jsp");
+        response.sendRedirect(request.getContextPath() + "/index.jsp");
         return;
     }
 
-    User loginUser = (obj instanceof User) ? (User) obj : null;
+    dto.User loginUser = (dto.User) obj;
+
+    // ⭐ 관리자면 무조건 관리자 메인으로 보냄
+    if ("admin".equalsIgnoreCase(loginUser.getRole())) {
+        response.sendRedirect(request.getContextPath() + "/admin/admin_main.jsp");
+        return;
+    }
+
     String displayName = (loginUser != null && loginUser.getName() != null)
                         ? loginUser.getName()
                         : String.valueOf(obj);

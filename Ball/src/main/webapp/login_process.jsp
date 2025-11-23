@@ -30,9 +30,9 @@
 
         // ⭐ 관리자 판별 후 분기
         if ("admin".equalsIgnoreCase(user.getRole())) {
-            response.sendRedirect("admin/admin_main.jsp");   // 관리자 페이지
+            response.sendRedirect(ctx + "/admin/admin_main.jsp");
         } else {
-            response.sendRedirect("main.jsp");               // 일반 사용자 페이지
+            response.sendRedirect(ctx + "/main.jsp");
         }
         return;
     }

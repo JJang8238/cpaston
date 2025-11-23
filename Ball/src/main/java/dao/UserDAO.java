@@ -226,9 +226,49 @@ public class UserDAO implements AutoCloseable {
         return false;
     }
 
+ // ============================================================
+    // ✔ 7) 관리자: 전체 회원 목록 조회 기능 추가
+    // ============================================================
+    public List<User> getAllUsers() {
+        List<User> list = new ArrayList<>();
+        String sql = "SELECT * FROM user ORDER BY id DESC";
 
+        try (PreparedStatement ps = getConn().prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                User u = new User();
+                u.setId(rs.getInt("id"));
+                u.setUsername(rs.getString("username"));
+                u.setName(rs.getString("name"));
+                u.setEmail(rs.getString("email"));
+                u.setRole(rs.getString("role"));
+                list.add(u);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    // ============================================================
+    // ✔ 8) 관리자: 회원 삭제 기능
+    // ============================================================
+    public boolean deleteUser(int id) {
+        String sql = "DELETE FROM user WHERE id = ?";
+        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate() == 1;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    
     // ----------------------------------------------------------------
-    // 7) 리소스 정리: try-with-resources에서 자동 호출
+    // 9) 리소스 정리: try-with-resources에서 자동 호출
     // ----------------------------------------------------------------
     @Override
     public void close() {

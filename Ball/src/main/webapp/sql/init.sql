@@ -12,6 +12,9 @@ CREATE TABLE `user` (
   email_verified TINYINT(1)   NOT NULL DEFAULT 0
 );
 
+ALTER TABLE user
+ADD COLUMN profile_image VARCHAR(255) NULL;
+
 CREATE TABLE email_verification (
   email       VARCHAR(255) NOT NULL PRIMARY KEY,
   code        VARCHAR(6)   NOT NULL,
@@ -80,10 +83,6 @@ CREATE TABLE IF NOT EXISTS place_reviews (
 INSERT INTO match_reservations (match_date, match_time, location, current_players, max_players)
 VALUES (CURDATE(), '18:00:00', '증산체육공원', 4, 16);
 
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
 CREATE TABLE IF NOT EXISTS post (
   id           INT AUTO_INCREMENT PRIMARY KEY,
   title        VARCHAR(200)  NOT NULL,
@@ -93,8 +92,6 @@ CREATE TABLE IF NOT EXISTS post (
   created_at   TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at   TIMESTAMP     NULL ON UPDATE CURRENT_TIMESTAMP
 );
->>>>>>> b972762a2b7dc89ab6d1c2de53c90cca833a1411
->>>>>>> 9c9a1dc922adba8981c83f10994b0143e362e30b
 
   SELECT id, username, name, email_verified
 FROM `user`
@@ -120,10 +117,6 @@ SELECT * FROM match_reservations WHERE match_date = CURDATE();
 
 DESC match_reservations;
 
-DESCRIBE match_reservations;
-
-SELECT * FROM match_reservations;
-
 commit;
 INSERT INTO match_reservations (match_date, match_time, location, current_players, max_players, match_status)
 VALUES 
@@ -135,17 +128,6 @@ VALUES
 ('2025-11-16', '20:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
 ('2025-11-16', '22:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
 ('2025-11-16', '00:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중');
-
-INSERT INTO match_reservations (match_date, match_time, location, current_players, max_players, match_status)
-VALUES 
-('2025-11-17', '10:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
-('2025-11-17', '12:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
-('2025-11-17', '14:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
-('2025-11-17', '16:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
-('2025-11-17', '18:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
-('2025-11-17', '20:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
-('2025-11-17', '22:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
-('2025-11-17', '00:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중');
 
 DELETE FROM match_reservations;
 
@@ -167,12 +149,26 @@ CREATE TABLE community_posts (
 
 DESC community_posts;
 
-INSERT INTO match_reservations (match_date, match_time, location, current_players, max_players, match_status)
-VALUES 
-('2025-11-19', '10:00:00', '양주시유소년축구클럽', 0, 18, '예약중'),
-('2025-11-19', '12:00:00', '양주시유소년축구클럽', 0, 18, '예약중'),
-('2025-11-19', '14:00:00', '양주시유소년축구클럽', 0, 18, '예약중'),
-('2025-11-19', '16:00:00', '양주시유소년축구클럽', 0, 18, '예약중'),
-('2025-11-19', '18:00:00', '양주시유소년축구클럽', 0, 18, '예약중'),
-('2025-11-19', '20:00:00', '양주시유소년축구클럽', 0, 18, '예약중'),
-('2025-11-19', '22:00:00', '양주시유소년축구클럽', 0, 18, '예약중');
+INSERT INTO user (username, password, name, email, email_verified, role, profile_image)
+VALUES (
+    'test13',                                                   -- 아이디
+    SHA2('1234', 256),                                          -- 비밀번호(평문 X)
+    '김뽀삐',                                                    -- 이름
+    'lejjsh1213@gmail.com',                                         -- 이메일
+    1,                                                          -- 이메일 인증됨(1) 처리
+    'student',                                                  -- 권한
+    'default-profile.png'                                       -- 기본 이미지
+);
+
+DESC matches;
+
+CREATE TABLE IF NOT EXISTS review (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    place_name VARCHAR(255) NOT NULL,
+    author VARCHAR(100) NOT NULL,
+    rating INT NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+SHOW CREATE TABLE place_reviews;

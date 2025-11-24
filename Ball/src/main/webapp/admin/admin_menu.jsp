@@ -2,7 +2,9 @@
 <%@ page import="java.util.List" %>
 <%@ page import="dao.UserDAO" %>
 <%@ page import="dto.User" %>
+
 <%
+    // 로그인 / 권한 체크
     Object obj = session.getAttribute("loginUser");
     if (obj == null) {
         response.sendRedirect(request.getContextPath() + "/index.jsp");
@@ -16,7 +18,7 @@
     }
 
     String ctx = request.getContextPath();
-    String pageParam = request.getParameter("page"); 
+    String pageParam = request.getParameter("page");
 %>
 
 <!DOCTYPE html>
@@ -58,24 +60,36 @@
 </head>
 <body>
 
+<!-- 상단바 -->
 <nav class="navbar navbar-dark bg-dark px-4">
     <span class="navbar-brand">관리자 페이지</span>
-    <span class="text-white"><%=loginUser.getName()%> 관리자님</span>
+
+    <div>
+        <a href="<%=ctx%>/admin/admin_main.jsp" class="btn btn-outline-light btn-sm me-3">
+            홈
+        </a>
+        <span class="text-white"><%=loginUser.getName()%> 관리자님</span>
+    </div>
 </nav>
 
 <div class="layout">
     <div class="sidebar">
         <a href="<%=ctx%>/admin/admin_menu.jsp?page=user">회원 관리</a>
         <a href="<%=ctx%>/admin/admin_menu.jsp?page=match">경기 관리</a>
-        <a href="<%=ctx%>/admin/admin_menu.jsp?page=review">리뷰 관리</a>
+
+        <!-- 리뷰 관리 → 서블릿 호출 -->
+        <a href="<%=ctx%>/admin/place-review">리뷰 관리</a>
+
         <a href="<%=ctx%>/admin/admin_menu.jsp?page=report">신고 처리</a>
         <a href="<%=ctx%>/admin/admin_menu.jsp?page=stats">커뮤니티 관리</a>
+
         <hr>
         <a href="<%=ctx%>/admin/admin_main.jsp">사용자 홈</a>
         <a href="<%=ctx%>/logout.jsp">로그아웃</a>
     </div>
 
     <div class="content">
+
         <% if (pageParam == null) { %>
 
             <h3>관리자 메인</h3>
@@ -91,6 +105,7 @@
 
         <% } else if ("review".equals(pageParam)) { %>
 
+            <!-- 리뷰 관리 -->
             <jsp:include page="pages/review_manage.jsp" />
 
         <% } else if ("report".equals(pageParam)) { %>
@@ -102,6 +117,7 @@
             <p>잘못된 페이지입니다.</p>
 
         <% } %>
+
     </div>
 </div>
 

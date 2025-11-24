@@ -26,7 +26,9 @@ public class ReviewDAO implements AutoCloseable {
         return conn;
     }
 
+    // ====================================
     // 리뷰 등록
+    // ====================================
     public int insert(Review r) {
         final String sql =
                 "INSERT INTO review(place_name, author, rating, content) VALUES (?,?,?,?)";
@@ -42,7 +44,9 @@ public class ReviewDAO implements AutoCloseable {
         return 0;
     }
 
+    // ====================================
     // 특정 풋살장 리뷰 목록
+    // ====================================
     public List<Review> listByPlace(String placeName) {
         final String sql =
                 "SELECT * FROM review WHERE place_name=? ORDER BY id DESC";
@@ -60,6 +64,62 @@ public class ReviewDAO implements AutoCloseable {
         return list;
     }
 
+    // ====================================
+    // 🔥 리뷰가 존재하는 장소 목록 (중복 제거)
+    // ====================================
+    public List<String> getReviewedPlaces() {
+        final String sql = "SELECT DISTINCT place_name FROM review ORDER BY place_name ASC";
+        List<String> list = new ArrayList<>();
+
+        try (PreparedStatement ps = getConn().prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                list.add(rs.getString("place_name"));
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
+    // ====================================
+    // 🔥 전체 리뷰 목록(관리자용)
+    // ====================================
+    public List<Review> listAll() {
+        final String sql = "SELECT * FROM review ORDER BY id DESC";
+        List<Review> list = new ArrayList<>();
+        try (PreparedStatement ps = getConn().prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                list.add(map(rs));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    // ====================================
+    // 🔥 리뷰 삭제(관리자용)
+    // ====================================
+    public int delete(int id) {
+        final String sql = "DELETE FROM review WHERE id=?";
+        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    // ====================================
+    // ResultSet → DTO 매핑
+    // ====================================
     private Review map(ResultSet rs) throws SQLException {
         Review r = new Review();
         r.setId(rs.getInt("id"));

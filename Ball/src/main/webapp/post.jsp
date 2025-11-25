@@ -7,15 +7,12 @@
     request.setCharacterEncoding("UTF-8");
     String ctx = request.getContextPath();
 
-    // 로그인 유저 정보
     User loginUser = (User) session.getAttribute("loginUser");
     String loginUsername = (loginUser != null) ? loginUser.getUsername() : null;
 
-    // from 파라미터 (community / mypage 구분)
     String from = request.getParameter("from");
     if (from == null) from = "community";
 
-    // 게시글 ID
     int id = -1;
     try { id = Integer.parseInt(request.getParameter("id")); } catch(Exception ignore){}
     if (id <= 0) {
@@ -23,7 +20,6 @@
         return;
     }
 
-    // DB 조회
     Post post = null;
     try (PostDAO dao = new PostDAO()) { post = dao.findById(id); }
     if (post == null) {
@@ -31,14 +27,14 @@
         return;
     }
 
-    // 댓글 저장소
+    boolean isBest = (post.getLikes() >= 5 && post.getDislikes() <= 3);
+
     Map<Integer, List<String>> COMMENTS = (Map<Integer, List<String>>) application.getAttribute("COMMENTS_BY_ID");
     if (COMMENTS == null) {
         COMMENTS = new LinkedHashMap<>();
         application.setAttribute("COMMENTS_BY_ID", COMMENTS);
     }
 
-    // 댓글 등록
     if ("POST".equalsIgnoreCase(request.getMethod())) {
         String newComment = request.getParameter("comment");
         if (newComment != null && !newComment.isBlank()) {
@@ -50,10 +46,8 @@
         return;
     }
 
-    // 댓글 목록
     List<String> commentList = COMMENTS.getOrDefault(id, new ArrayList<>());
 
-    // 안전 출력
     String safeTitle = (post.getTitle()==null?"":post.getTitle())
             .replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
             .replace("\"","&quot;").replace("'","&#39;");
@@ -68,7 +62,6 @@
             .replace("\"","&quot;").replace("'","&#39;")
             .replace("\n","<br/>");
 
-    // 🔥 목록으로 버튼 설정
     String backUrl =
         "mypage".equals(from)
         ? ctx + "/mypage.jsp"
@@ -97,8 +90,13 @@
 
         <!-- 게시글 -->
         <div class="card shadow-sm mb-4">
-          <div class="card-header bg-primary text-white">
+          <div class="card-header bg-primary text-white d-flex align-items-center justify-content-between">
             <b><%= safeTitle %></b>
+            <span id="bestBadge"
+                  class="badge bg-light text-success"
+                  style="<%= isBest ? "" : "display:none;" %>">
+              BEST
+            </span>
           </div>
 
           <div class="card-body">
@@ -114,22 +112,49 @@
             <hr>
             <div><%= safeContent %></div>
 
-            <!-- 수정/삭제 버튼 -->
+            <!-- 좋아요 / 싫어요 / 신고 -->
+            <div class="mt-4 d-flex align-items-center gap-2">
+              <div class="btn-group btn-group-sm" role="group">
+
+                <button type="button" class="btn btn-outline-primary" id="btnLike">
+                  👍 좋아요 <span id="likeCount"><%= post.getLikes() %></span>
+                </button>
+
+                <button type="button" class="btn btn-outline-secondary" id="btnDislike">
+                  👎 싫어요 <span id="dislikeCount"><%= post.getDislikes() %></span>
+                </button>
+
+              </div>
+
+              <% if (post.getReports() < 7) { %>
+                <button type="button" class="btn btn-sm btn-outline-danger" id="btnReport">
+                  🚨 신고하기
+                </button>
+              <% } else { %>
+                <span class="badge bg-danger ms-1" id="reportBadge">🚨 신고 누적됨</span>
+              <% } %>
+
+              <small class="text-muted ms-2">
+                <% if (loginUsername == null) { %>
+                  로그인 후 투표/신고할 수 있습니다.
+                <% } else { %>
+                  좋아요/싫어요/신고로 게시글을 평가해 보세요!
+                <% } %>
+              </small>
+            </div>
+
+            <!-- 수정/삭제 -->
             <% if (loginUsername != null && loginUsername.equals(post.getAuthor())) { %>
             <div class="d-flex justify-content-end gap-2 mt-4">
-
-              <!-- 수정 -->
               <a href="<%=ctx%>/edit.jsp?id=<%=post.getId()%>&from=<%=from%>"
                  class="btn btn-sm btn-warning">수정</a>
 
-              <!-- 삭제 -->
               <form action="<%=ctx%>/deletePost" method="post"
                     onsubmit="return confirm('정말 삭제하시겠습니까?');">
                 <input type="hidden" name="postId" value="<%=post.getId()%>">
                 <input type="hidden" name="from"   value="<%=from%>">
                 <button type="submit" class="btn btn-sm btn-danger">삭제</button>
               </form>
-
             </div>
             <% } %>
 
@@ -171,7 +196,6 @@
           </div>
         </div>
 
-        <!-- 목록 버튼 -->
         <div class="mt-3 text-end">
           <a href="<%=backUrl%>" class="btn btn-secondary btn-sm">목록으로</a>
         </div>
@@ -185,6 +209,90 @@
       <small>Copyright © 볼피또 <%= java.time.Year.now() %></small>
     </div>
   </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    const loginUser = "<%= (loginUsername != null ? loginUsername : "") %>";
+
+    function sendAction(type) {
+      if (!loginUser) {
+        alert("로그인 후 이용 가능합니다.");
+        return;
+      }
+
+      fetch("<%=ctx%>/post-like", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+        },
+        body: new URLSearchParams({
+          id: "<%=id%>",
+          action: type
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.ok) {
+          if (type === "report") {
+            alert("이미 신고했거나 처리 중 오류가 발생했습니다.");
+          } else {
+            alert("처리 중 오류가 발생했습니다.");
+          }
+          return;
+        }
+
+        // 좋아요/싫어요 카운트 갱신
+        if (type === "like" || type === "dislike") {
+          document.getElementById("likeCount").textContent = data.likes;
+          document.getElementById("dislikeCount").textContent = data.dislikes;
+
+          // BEST 뱃지 토글
+          const bestBadge = document.getElementById("bestBadge");
+          const isBest = (data.likes >= 5 && data.dislikes <= 3);
+          bestBadge.style.display = isBest ? "inline-block" : "none";
+        }
+
+        // 신고 처리
+        if (type === "report") {
+          alert("신고가 접수되었습니다.");
+          if (data.reports >= 7) {
+            const btnReport = document.getElementById("btnReport");
+            if (btnReport) {
+              btnReport.style.display = "none";
+              const badge = document.createElement("span");
+              badge.id = "reportBadge";
+              badge.className = "badge bg-danger ms-1";
+              badge.textContent = "🚨 신고 누적됨";
+              btnReport.parentElement.appendChild(badge);
+            }
+          }
+        }
+      })
+      .catch(() => alert("서버 오류가 발생했습니다."));
+    }
+
+    document.getElementById("btnLike").addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      sendAction("like");
+    });
+
+    document.getElementById("btnDislike").addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      sendAction("dislike");
+    });
+
+    const btnReport = document.getElementById("btnReport");
+    if (btnReport) {
+      btnReport.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        sendAction("report");
+      });
+    }
+  </script>
 
 </body>
 </html>

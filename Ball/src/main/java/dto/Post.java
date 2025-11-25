@@ -3,6 +3,7 @@ package dto;
 import java.sql.Timestamp;
 
 public class Post {
+
     private int id;
     private String title;
     private String content;
@@ -11,24 +12,98 @@ public class Post {
     private Timestamp createdAt;
     private Timestamp updatedAt;
 
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
+    private int likes;
+    private int dislikes;
 
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
+    // ⭐ 추가된 필드
+    private int reports;
 
-    public String getContent() { return content; }
-    public void setContent(String content) { this.content = content; }
+    public Post() {}
 
-    public String getCategory() { return category; }
-    public void setCategory(String category) { this.category = category; }
+    // --------------------
+    // Getter / Setter
+    // --------------------
 
-    public String getAuthor() { return author; }
-    public void setAuthor(String author) { this.author = author; }
+    public int getId() {
+        return id;
+    }
 
-    public Timestamp getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
+    public void setId(int id) {
+        this.id = id;
+    }
 
-    public Timestamp getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(Timestamp updatedAt) { this.updatedAt = updatedAt; }
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+
+    public Timestamp getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Timestamp getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Timestamp updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public int getLikes() {
+        return likes;
+    }
+
+    public void setLikes(int likes) {
+        this.likes = likes;
+    }
+
+    public int getDislikes() {
+        return dislikes;
+    }
+
+    public void setDislikes(int dislikes) {
+        this.dislikes = dislikes;
+    }
+
+    // -----------------------------
+    // ⭐ 추가된 Getter / Setter
+    // -----------------------------
+    public int getReports() {
+        return reports;
+    }
+
+    public void setReports(int reports) {
+        this.reports = reports;
+    }
 }

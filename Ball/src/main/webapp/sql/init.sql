@@ -120,14 +120,14 @@ DESC match_reservations;
 commit;
 INSERT INTO match_reservations (match_date, match_time, location, current_players, max_players, match_status)
 VALUES 
-('2025-11-16', '10:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
-('2025-11-16', '12:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
-('2025-11-16', '14:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
-('2025-11-16', '16:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
-('2025-11-16', '18:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
-('2025-11-16', '20:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
-('2025-11-16', '22:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중'),
-('2025-11-16', '00:00:00', '라이프축구클럽 LIFE FC', 0, 18, '예약중');
+('2025-11-27', '10:00:00', '탄탄축구실내풋살장', 7, 18, '예약중'),
+('2025-11-27', '12:00:00', '탄탄축구실내풋살장', 6, 18, '예약중'),
+('2025-11-27', '14:00:00', '탄탄축구실내풋살장', 14, 18, '예약중'),
+('2025-11-27', '16:00:00', '탄탄축구실내풋살장', 0, 18, '예약중'),
+('2025-11-27', '18:00:00', '탄탄축구실내풋살장', 0, 18, '예약중'),
+('2025-11-27', '20:00:00', '탄탄축구실내풋살장', 7, 18, '예약중'),
+('2025-11-27', '22:00:00', '탄탄축구실내풋살장', 14, 18, '예약중');
+
 
 DELETE FROM match_reservations;
 
@@ -151,10 +151,10 @@ DESC community_posts;
 
 INSERT INTO user (username, password, name, email, email_verified, role, profile_image)
 VALUES (
-    'test13',                                                   -- 아이디
+    'test11',                                                   -- 아이디
     SHA2('1234', 256),                                          -- 비밀번호(평문 X)
-    '김뽀삐',                                                    -- 이름
-    'lejjsh1213@gmail.com',                                         -- 이메일
+    '김써미',                                                    -- 이름
+    'lejjsh1112@gmail.com',                                         -- 이메일
     1,                                                          -- 이메일 인증됨(1) 처리
     'student',                                                  -- 권한
     'default-profile.png'                                       -- 기본 이미지
@@ -171,4 +171,27 @@ CREATE TABLE IF NOT EXISTS review (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-SHOW CREATE TABLE place_reviews;
+ALTER TABLE post ADD COLUMN likes INT DEFAULT 0;
+ALTER TABLE post ADD COLUMN dislikes INT DEFAULT 0;
+
+CREATE TABLE post_vote_log (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    post_id INT NOT NULL,
+    user_id INT NOT NULL,
+    vote_type ENUM('like','dislike') NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_vote_unique (post_id, user_id),
+    FOREIGN KEY (post_id) REFERENCES post(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
+);
+
+ALTER TABLE post ADD COLUMN reports INT DEFAULT 0;
+
+CREATE TABLE post_report_log (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    post_id INT NOT NULL,
+    user_id VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_report_unique (post_id, user_id),
+    FOREIGN KEY (post_id) REFERENCES post(id) ON DELETE CASCADE
+);

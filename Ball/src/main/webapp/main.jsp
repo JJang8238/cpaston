@@ -32,7 +32,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
-<body>
+<!-- ⭐ footer를 항상 아래로 내리는 핵심 구조 ⭐ -->
+<body class="d-flex flex-column min-vh-100 bg-light">
 
 <!-- 네비게이션 -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -46,6 +47,8 @@
     </div>
 </nav>
 
+<!-- ⭐ 콘텐츠 영역 (footer 위 공간 전체 차지) ⭐ -->
+<main class="flex-grow-1">
 <div class="container px-4 px-lg-5">
 
     <!-- Hero -->
@@ -108,37 +111,14 @@
     <%
         } else {
             for (Match m : matches) {
-
-                String timeStr = m.getMatchTime() != null
-                                ? m.getMatchTime().toString()
-                                : "시간 없음";
-
-                String place = m.getLocation();
-                int cur = m.getCurrentPlayers();
-                int max = m.getMaxPlayers();
-                String status = m.getMatchStatus();
-
-                String badgeText = "";
-                String badgeColor = "";
-
-                if ("취소됨".equals(status)) {
-                    badgeText = "경기 취소";
-                    badgeColor = "danger";
-                } else if (cur >= max) {
-                    badgeText = "예약 마감";
-                    badgeColor = "secondary";
-                } else {
-                    badgeText = "예약중";
-                    badgeColor = "success";
-                }
     %>
 
         <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
             <div>
-                <div class="h6 mb-1"><%=timeStr%> 경기</div>
-                <small class="text-muted"><%=place%> | 인원: <%=cur%> / <%=max%></small>
+                <div class="h6 mb-1"><%=m.getMatchTime()%> 경기</div>
+                <small class="text-muted"><%=m.getLocation()%> | 인원: <%=m.getCurrentPlayers()%> / <%=m.getMaxPlayers()%></small>
             </div>
-            <span class="badge bg-<%=badgeColor%> rounded-pill px-3 py-2"><%=badgeText%></span>
+            <span class="badge bg-success rounded-pill px-3 py-2">예약중</span>
         </a>
 
     <%
@@ -149,12 +129,22 @@
     </div>
 
 </div>
+</main>
 
-<footer class="py-5 bg-dark">
-    <div class="container"><p class="m-0 text-center text-white">Copyright &copy; 볼피또 2025</p></div>
+<!-- ⭐ footer — 항상 화면 맨 아래 ⭐ -->
+<footer class="py-4 bg-dark text-light mt-auto">
+  <div class="container text-center">
+      <div class="mb-1" style="font-size: 20px; font-weight: 700;">
+          ⚽ Ballpitto – Play Together, Enjoy More
+      </div>
+
+      <div class="small text-secondary">
+          📍 위치 기반 경기 매칭&nbsp;&nbsp;|&nbsp;&nbsp;
+          👥 파트너 찾기&nbsp;&nbsp;|&nbsp;&nbsp;
+          📝 리뷰 & 커뮤니티
+      </div>
+  </div>
 </footer>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

@@ -73,6 +73,7 @@
         <i class="bi bi-person-circle me-2"></i> 프로필 수정
     </h1>
 
+	<form action="updateProfile" method="post" enctype="multipart/form-data">
     <div class="row g-4">
 
         <!-- 왼쪽 프로필 -->

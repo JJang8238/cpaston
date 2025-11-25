@@ -22,8 +22,8 @@
     String fRole = loginUser.getRole();
 
     String fProfile = (loginUser.getProfileImage() != null && !loginUser.getProfileImage().isEmpty())
-                       ? loginUser.getProfileImage()
-                       : ctx + "/assets/img/1.png";
+                       ? (ctx + "/uploads/" + loginUser.getProfileImage())
+                       : (ctx + "/assets/img/1.png");
 
     List<Post> myPosts = new ArrayList<>();
     try (PostDAO dao = new PostDAO()) {
@@ -301,4 +301,4 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
-</html>
+</html

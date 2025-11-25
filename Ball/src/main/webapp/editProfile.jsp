@@ -1,129 +1,121 @@
 <%@ page contentType="text/html; charset=UTF-8" session="true" %>
-    <%@ page import="dto.User" %>
+<%@ page import="dto.User" %>
 
-        <% User user=(User) session.getAttribute("loginUser"); if (user==null) { response.sendRedirect("index.jsp");
-            return; } %>
+<%
+    User user = (User) session.getAttribute("loginUser");
+    if (user == null) {
+        response.sendRedirect("index.jsp");
+        return;
+    }
+%>
 
-            <!DOCTYPE html>
-            <html lang="ko">
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>프로필 수정</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 450px;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h2 {
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            text-align: center;
+        }
+        .profile-image {
+            display: block;
+            margin: 0 auto 15px auto;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            background-color: #eee;
+        }
+        form label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        form input[type="text"],
+        form input[type="email"],
+        form input[type="password"],
+        form input[type="file"] {
+            width: 100%;
+            padding: 8px 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #0d6efd;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        button:hover {
+            background-color: #0b5ed7;
+        }
+        .back-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            margin-top: 15px;
+            color: #555;
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>나의 계정</h2>
 
-            <head>
-                <meta charset="UTF-8">
-                <title>프로필 수정</title>
-                <style>
-                    body {
-                        font-family: 'Arial', sans-serif;
-                        background-color: #f9f9f9;
-                        margin: 0;
-                        padding: 0;
-                    }
+        <!-- 🔥 반드시 서블릿으로 요청해야 함 -->
+        <form action="updateProfile" method="post" enctype="multipart/form-data">
 
-                    .container {
-                        max-width: 450px;
-                        margin: 50px auto;
-                        padding: 30px;
-                        background-color: #fff;
-                        border-radius: 12px;
-                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-                    }
+            <!-- 프로필 이미지 미리보기 -->
+            <img src="<%= user.getProfileImage() != null ? "uploads/" + user.getProfileImage() : "default-profile.png" %>" 
+                 alt="프로필 이미지" class="profile-image">
 
-                    h2 {
-                        margin-bottom: 20px;
-                        font-size: 1.5em;
-                        text-align: center;
-                    }
+            <label>사진 업로드</label>
+            <input type="file" name="profileImage" accept="image/*">
 
-                    .profile-image {
-                        display: block;
-                        margin: 0 auto 15px auto;
-                        width: 100px;
-                        height: 100px;
-                        border-radius: 50%;
-                        object-fit: cover;
-                        background-color: #eee;
-                    }
+            <label>이름</label>
+            <input type="text" name="name" value="<%= user.getName() %>">
 
-                    form label {
-                        display: block;
-                        margin-bottom: 5px;
-                        font-weight: bold;
-                    }
+            <label>이메일</label>
+            <input type="email" name="email" value="<%= user.getEmail() %>" readonly>
 
-                    form input[type="text"],
-                    form input[type="email"],
-                    form input[type="password"],
-                    form input[type="file"] {
-                        width: 100%;
-                        padding: 8px 10px;
-                        margin-bottom: 15px;
-                        border: 1px solid #ccc;
-                        border-radius: 6px;
-                        box-sizing: border-box;
-                    }
+            <label>새 비밀번호</label>
+            <input type="password" name="newPassword" placeholder="변경 시만 입력">
 
-                    button {
-                        width: 100%;
-                        padding: 10px;
-                        background-color: #0d6efd;
-                        color: white;
-                        border: none;
-                        border-radius: 6px;
-                        cursor: pointer;
-                        font-size: 1em;
-                    }
+            <button type="submit">변경사항 저장</button>
+        </form>
 
-                    button:hover {
-                        background-color: #0b5ed7;
-                    }
-
-                    .back-link {
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        text-align: center;
-                        margin-top: 15px;
-                        color: #555;
-                        text-decoration: none;
-                        font-size: 0.9em;
-                    }
-
-                    .back-link:hover {
-                        text-decoration: underline;
-                    }
-                </style>
-            </head>
-
-            <body>
-                <div class="container">
-                    <h2>나의 계정</h2>
-
-                    <!-- 🔥 수정된 핵심 부분 : 경로 중복 제거 -->
-                    <img src="<%= (user.getProfileImage() != null && !user.getProfileImage().isEmpty())
-                     ? user.getProfileImage()
-                     : " assets/img/1.png" %>"
-                    alt="프로필 이미지" class="profile-image">
-
-                    <form action="updateProfile" method="post" enctype="multipart/form-data">
-
-                        <label>사진 업로드</label>
-                        <input type="file" name="profileImage" accept="image/*">
-
-                        <label>이름</label>
-                        <input type="text" name="name" value="<%= user.getName() %>">
-
-                        <label>이메일</label>
-                        <input type="email" name="email" value="<%= user.getEmail() %>" readonly>
-
-                        <label>새 비밀번호</label>
-                        <input type="password" name="newPassword" placeholder="변경 시만 입력">
-
-                        <button type="submit">변경사항 저장</button>
-                    </form>
-
-                    <a href="mypage.jsp" class="back-link">
-                        마이페이지로 돌아가기
-                    </a>
-                </div>
-            </body>
-
-            </html>
+        <a href="mypage.jsp" class="back-link">
+            마이페이지로 돌아가기
+        </a>
+    </div>
+</body>
+</html>

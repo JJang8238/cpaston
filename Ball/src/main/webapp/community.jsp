@@ -10,6 +10,14 @@
   // 로그인 유저
   User loginUser = (User) session.getAttribute("loginUser");
 
+  // 🔥 댓글 Map 가져오기
+  Map<Integer, List<String>> COMMENTS =
+      (Map<Integer, List<String>>) application.getAttribute("COMMENTS_BY_ID");
+  if (COMMENTS == null) {
+      COMMENTS = new LinkedHashMap<>();
+      application.setAttribute("COMMENTS_BY_ID", COMMENTS);
+  }
+
   // 카테고리
   String category = request.getParameter("category");
   if (category == null) category = "전체";
@@ -35,9 +43,9 @@
   <title>볼피또 - 커뮤니티</title>
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
   <style>
     body { background:#f8f9fa; }
-    .site-footer small{ color:#dee2e6; }
   </style>
 </head>
 
@@ -79,18 +87,28 @@
         </div>
 
         <% if (posts.isEmpty()) { %>
+
           <div class="alert alert-info">해당 카테고리에는 게시글이 없습니다.</div>
+
         <% } else { %>
 
           <div class="row row-cols-1 g-3">
           <% for (Post p : posts) {
 
+              // 제목 안전 처리
               String title = (p.getTitle()==null?"":p.getTitle())
                  .replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
                  .replace("\"","&quot;").replace("'","&#39;");
 
               String dateStr = (p.getCreatedAt()==null) ? "" :
                    new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm").format(p.getCreatedAt());
+
+              // 🔥 댓글 개수 가져오기
+              int commentCount = 0;
+              if (COMMENTS.containsKey(p.getId())) {
+                  commentCount = COMMENTS.get(p.getId()).size();
+              }
+
           %>
 
             <div class="col">
@@ -103,8 +121,13 @@
                     <h5 class="card-title text-dark mb-1"><%= title %></h5>
                   </a>
 
-                  <p class="card-text text-muted small mb-2">
+                  <p class="card-text text-muted small mb-1">
                     <%= p.getAuthor() %> · <%= dateStr %>
+                  </p>
+
+                  <!-- 🔥 댓글 개수 출력 -->
+                  <p class="small text-muted mb-0">
+                    💬 댓글 <%= commentCount %>개
                   </p>
 
                 </div>
@@ -115,15 +138,26 @@
           </div>
 
         <% } %>
+
       </section>
     </div>
   </main>
 
-  <footer class="mt-auto py-4 bg-dark text-light">
-    <div class="container text-center">
-      <small>Copyright © 플랩풋볼 <%= java.time.Year.now() %></small>
-    </div>
-  </footer>
+<footer class="mt-auto py-4 bg-dark text-light">
+  <div class="container text-center">
+
+      <div class="mb-1" style="font-size: 20px; font-weight: 700;">
+          ⚽ Ballpitto – Play Together, Enjoy More
+      </div>
+
+      <div class="small text-secondary">
+          📍 위치 기반 경기 매칭&nbsp;&nbsp;|&nbsp;&nbsp;
+          👥 파트너 찾기&nbsp;&nbsp;|&nbsp;&nbsp;
+          📝 리뷰 & 커뮤니티
+      </div>
+
+  </div>
+</footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

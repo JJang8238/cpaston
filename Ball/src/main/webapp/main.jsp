@@ -5,11 +5,18 @@
     // 로그인 체크
     Object obj = session.getAttribute("loginUser");
     if (obj == null) {
-        response.sendRedirect("index.jsp");
+        response.sendRedirect(request.getContextPath() + "/index.jsp");
         return;
     }
 
-    User loginUser = (obj instanceof User) ? (User) obj : null;
+    dto.User loginUser = (dto.User) obj;
+
+    // ⭐ 관리자면 무조건 관리자 메인으로 보냄
+    if ("admin".equalsIgnoreCase(loginUser.getRole())) {
+        response.sendRedirect(request.getContextPath() + "/admin/admin_main.jsp");
+        return;
+    }
+
     String displayName = (loginUser != null && loginUser.getName() != null)
                         ? loginUser.getName()
                         : String.valueOf(obj);
@@ -29,6 +36,7 @@
 <head>
     <meta charset="UTF-8">
     <title>메인 페이지</title>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
@@ -45,6 +53,7 @@
         </ul>
     </div>
 </nav>
+
 
 <div class="container px-4 px-lg-5">
 
@@ -64,6 +73,7 @@
     <div class="my-5 p-3 bg-secondary text-white text-center rounded">
         심한 욕설, 불법 행위 등을 금지합니다.
     </div>
+
 
     <!-- 서비스 카드 -->
     <div class="row text-center mb-5">
@@ -91,6 +101,7 @@
             </div></div>
         </div>
     </div>
+
 
     <!-- 오늘의 경기 예약 현황 -->
     <h2 class="fw-bold mb-1">오늘의 경기 예약 현황</h2>

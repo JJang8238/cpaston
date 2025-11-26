@@ -1,11 +1,14 @@
 package dao;
 
 import java.sql.*;
+import java.util.List;
+import java.util.ArrayList;
 import dto.User;
 import util.DBConnection;
 import util.PasswordUtil;  // SHA-256 해시 유틸
 import java.util.List;
 import java.util.ArrayList;
+
 
 
 public class UserDAO implements AutoCloseable {
@@ -228,7 +231,8 @@ public class UserDAO implements AutoCloseable {
         return false;
     }
 
- // ============================================================
+ 
+    // ============================================================
     // ✔ 7) 관리자: 전체 회원 목록 조회 기능 추가
     // ============================================================
     public List<User> getAllUsers() {
@@ -267,10 +271,24 @@ public class UserDAO implements AutoCloseable {
         }
         return false;
     }
+	// ============================================================
+    // 9) 관리자: 회원 권한(role) 변경
+    // ============================================================
+   public boolean updateUserRole(int id, String role) {
+        String sql = "UPDATE user SET role=? WHERE id=?";
+        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+            ps.setString(1, role);
+            ps.setInt(2, id);
+            return ps.executeUpdate() == 1;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 
     
     // ----------------------------------------------------------------
-    // 9) 리소스 정리: try-with-resources에서 자동 호출
+    // 10) 리소스 정리: try-with-resources에서 자동 호출
     // ----------------------------------------------------------------
     @Override
     public void close() {

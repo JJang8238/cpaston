@@ -5,7 +5,12 @@ import util.DBConnection;
 import java.sql.*;
 import java.util.*;
 
-public class PlaceReviewDAO {
+public class PlaceReviewDAO implements AutoCloseable {
+
+	@Override
+	public void close() {
+	    // 아무것도 안 함 (연결은 try-with-resources에서 처리됨)
+	}
 
     // ======================================================
     // 1) 장소별 리뷰 목록 조회
@@ -51,7 +56,7 @@ public class PlaceReviewDAO {
     }
 
     // ======================================================
-    // ⭐⭐ 2) 사용자별 리뷰 목록 조회 (마이페이지에서 사용)
+    // 2) 사용자별 리뷰 목록 조회
     // ======================================================
     public List<Map<String, Object>> listByUser(int userId) {
         List<Map<String, Object>> list = new ArrayList<>();
@@ -89,7 +94,6 @@ public class PlaceReviewDAO {
         return list;
     }
 
-
     // ======================================================
     // 3) 리뷰 추가
     // ======================================================
@@ -114,7 +118,6 @@ public class PlaceReviewDAO {
 
         return false;
     }
-
 
     // ======================================================
     // 4) 리뷰 수정
@@ -142,9 +145,8 @@ public class PlaceReviewDAO {
         return false;
     }
 
-
     // ======================================================
-    // 5) 리뷰 삭제
+    // 5-1) 사용자용 삭제 (reviewId + userId)
     // ======================================================
     public boolean delete(int reviewId, int userId) {
 
@@ -159,6 +161,27 @@ public class PlaceReviewDAO {
             ps.setInt(1, reviewId);
             ps.setInt(2, userId);
 
+            return ps.executeUpdate() == 1;
+
+        } catch (Exception e) { e.printStackTrace(); }
+
+        return false;
+    }
+
+    // ======================================================
+    // 5-2) 관리자용 삭제 (reviewId만)
+    // ======================================================
+    public boolean adminDelete(int reviewId) {
+
+        String sql = """
+            DELETE FROM place_reviews
+            WHERE id = ?
+        """;
+
+        try (Connection c = DBConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+
+            ps.setInt(1, reviewId);
             return ps.executeUpdate() == 1;
 
         } catch (Exception e) { e.printStackTrace(); }

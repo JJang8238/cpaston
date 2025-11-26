@@ -25,42 +25,46 @@ public class ReviewServlet extends HttpServlet {
 
         String action = req.getParameter("action");
 
-        // ================================
+        // -------------------------------
         // 장소별 리뷰 목록
-        // ================================
+        // -------------------------------
         if ("listByPlace".equals(action)) {
 
             String place = req.getParameter("place");
-            List<Map<String, Object>> list = new PlaceReviewDAO().listByPlace(place);
+
+            List<Map<String, Object>> list;
+            try (PlaceReviewDAO dao = new PlaceReviewDAO()) {
+                list = dao.listByPlace(place);
+            }
 
             // 평균 평점 계산
             double sum = 0;
-            int count = 0;
-            for (var r : list) {
+            int cnt = 0;
+            for (Map<String, Object> r : list) {
                 Object ratingObj = r.get("rating");
                 if (ratingObj != null) {
-                    count++;
                     sum += ((Number) ratingObj).doubleValue();
+                    cnt++;
                 }
             }
 
-            double avg = (count == 0 ? 0 : sum / count);
+            double avg = (cnt == 0 ? 0 : sum / cnt);
 
             // JSON 반환
-            StringBuilder sb = new StringBuilder();
-            sb.append("{");
-            sb.append("\"avgRating\":").append(String.format("%.1f", avg)).append(",");
-            sb.append("\"count\":").append(list.size()).append(",");
-            sb.append("\"reviews\":").append(toJson(list));
-            sb.append("}");
+            String json =
+                    "{"
+                            + "\"avgRating\":" + String.format("%.1f", avg) + ","
+                            + "\"count\":" + list.size() + ","
+                            + "\"reviews\":" + toJson(list)
+                            + "}";
 
-            resp.getWriter().print(sb.toString());
+            resp.getWriter().print(json);
             return;
         }
 
-        // ================================
+        // -------------------------------
         // 경기별 리뷰 목록
-        // ================================
+        // -------------------------------
         else if ("listByMatch".equals(action)) {
 
             int matchId = Integer.parseInt(req.getParameter("matchId"));
@@ -73,6 +77,7 @@ public class ReviewServlet extends HttpServlet {
         resp.getWriter().print("[]");
     }
 
+
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws IOException {
@@ -81,20 +86,21 @@ public class ReviewServlet extends HttpServlet {
         resp.setContentType("application/json; charset=UTF-8");
 
         String action = req.getParameter("action");
-        HttpSession s = req.getSession();
+        HttpSession session = req.getSession();
 
-        User loginUser = (User) s.getAttribute("loginUser");
+        User loginUser = (User) session.getAttribute("loginUser");
         if (loginUser == null) {
             resp.getWriter().print("{\"ok\":false, \"message\":\"login\"}");
             return;
         }
 
         int userId = loginUser.getId();
+        boolean isAdmin = "admin".equals(loginUser.getRole());
         boolean ok = false;
 
-        /* =====================================================
-            🔥 장소 리뷰 추가 (addByPlace)
-        ===================================================== */
+        // -------------------------------
+        // 장소 리뷰 추가
+        // -------------------------------
         if ("add".equals(action) || "addByPlace".equals(action)) {
 
             String placeName = req.getParameter("place");
@@ -102,14 +108,13 @@ public class ReviewServlet extends HttpServlet {
             String content = req.getParameter("content");
 
             ok = new PlaceReviewDAO().add(userId, placeName, rating, content);
-
             resp.getWriter().print("{\"ok\":" + ok + "}");
             return;
         }
 
-        /* =====================================================
-            🔥 경기 리뷰 추가 (addByMatch)
-        ===================================================== */
+        // -------------------------------
+        // 경기 리뷰 추가
+        // -------------------------------
         else if ("addByMatch".equals(action)) {
 
             int matchId = Integer.parseInt(req.getParameter("matchId"));
@@ -117,63 +122,66 @@ public class ReviewServlet extends HttpServlet {
             String content = req.getParameter("content");
 
             ok = new MatchReviewDAO().add(userId, matchId, rating, content);
-
             resp.getWriter().print("{\"ok\":" + ok + "}");
             return;
         }
 
-        /* =====================================================
-            🔥 장소 리뷰 수정 (update / updateByPlace)
-            - 작성자(userId) 검증은 DAO에서 id + user_id 조건으로 처리
-        ===================================================== */
+        // -------------------------------
+        // 장소 리뷰 수정
+        // -------------------------------
         else if ("update".equals(action) || "updateByPlace".equals(action)) {
 
             int reviewId = Integer.parseInt(req.getParameter("id"));
             Integer rating = parseInt(req.getParameter("rating"));
             String content = req.getParameter("content");
 
-            ok = new PlaceReviewDAO().update(reviewId, userId,
-                                             rating != null ? rating : 0,
-                                             content);
-
+            ok = new PlaceReviewDAO().update(
+                    reviewId, userId,
+                    rating != null ? rating : 0,
+                    content
+            );
             resp.getWriter().print("{\"ok\":" + ok + "}");
             return;
         }
 
-        /* =====================================================
-            🔥 장소 리뷰 삭제 (delete / deleteByPlace)
-        ===================================================== */
+        // -------------------------------
+        // 장소 리뷰 삭제 (유저 vs 관리자)
+        // -------------------------------
         else if ("delete".equals(action) || "deleteByPlace".equals(action)) {
 
             int reviewId = Integer.parseInt(req.getParameter("id"));
 
-            ok = new PlaceReviewDAO().delete(reviewId, userId);
+            PlaceReviewDAO dao = new PlaceReviewDAO();
+
+            if (isAdmin) {
+                ok = dao.adminDelete(reviewId);
+            } else {
+                ok = dao.delete(reviewId, userId);
+            }
 
             resp.getWriter().print("{\"ok\":" + ok + "}");
             return;
         }
 
-        /* =====================================================
-            🔥 (기존) placeName 으로 ReviewDTO 리스트 반환
-            - 예전 AJAX 코드 호환용
-        ===================================================== */
+        // -------------------------------
+        // 구(旧) ReviewDAO 방식 (호환용)
+        // -------------------------------
         else if (req.getParameter("placeName") != null) {
 
             String placeName = req.getParameter("placeName");
+            List<Review> list = new ReviewDAO().listByPlace(placeName);
 
-            List<Review> lstPlace = new ReviewDAO().listByPlace(placeName);
-
-            Gson gson = new Gson();
-            String json = gson.toJson(lstPlace);
-
-            resp.getWriter().print(json);
+            resp.getWriter().print(new Gson().toJson(list));
             return;
         }
 
         resp.getWriter().print("{\"ok\":false}");
     }
 
-    /* ======================= 유틸 ======================= */
+
+    // ============================
+    // 유틸 메서드
+    // ============================
 
     private Integer parseInt(String s) {
         try {
@@ -191,10 +199,9 @@ public class ReviewServlet extends HttpServlet {
                 .replace("\r", "");
     }
 
-    /* =====================================================
-        리스트<Map<String,Object>> → JSON 배열 변환
-       ⭐ null-safe 처리되어 JSON 깨지는 문제 해결 ⭐
-    ===================================================== */
+    // -------------------------------
+    // JSON 변환 (키 전부 수정됨)
+    // -------------------------------
     private String toJson(List<Map<String, Object>> list) {
 
         StringBuilder sb = new StringBuilder("[");
@@ -202,20 +209,23 @@ public class ReviewServlet extends HttpServlet {
 
             Map<String, Object> m = list.get(i);
 
-            Integer rating = (m.get("rating") instanceof Number) ?
-                    ((Number) m.get("rating")).intValue() : 0;
-
             String author = esc((String) m.get("user"));
+            String place = esc((String) m.get("place_name"));
             String content = esc((String) m.get("content"));
-            String createdAt = esc((String) m.get("createdAt"));
+            String createdAt = esc((String) m.get("created_at"));  // ★ 수정됨
+
+            int rating = (m.get("rating") instanceof Number)
+                    ? ((Number) m.get("rating")).intValue()
+                    : 0;
 
             sb.append("{")
-              .append("\"id\":").append(m.get("id")).append(",")
-              .append("\"author\":\"").append(author).append("\",")
-              .append("\"rating\":").append(rating).append(",")
-              .append("\"content\":\"").append(content).append("\",")
-              .append("\"createdAt\":\"").append(createdAt).append("\"")
-              .append("}");
+                    .append("\"id\":").append(m.get("id")).append(",")
+                    .append("\"placeName\":\"").append(place).append("\",")
+                    .append("\"author\":\"").append(author).append("\",")
+                    .append("\"rating\":").append(rating).append(",")
+                    .append("\"content\":\"").append(content).append("\",")
+                    .append("\"createdAt\":\"").append(createdAt).append("\"")
+                    .append("}");
 
             if (i < list.size() - 1) sb.append(",");
         }

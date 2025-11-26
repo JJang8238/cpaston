@@ -5,18 +5,15 @@
 
 <%
   request.setCharacterEncoding("UTF-8");
-  String ctx = request.getContextPath();  // 예: /Ball
+  String ctx = request.getContextPath();
 
-  // 로그인 유저
   User loginUser = (User) session.getAttribute("loginUser");
 
-  // 카테고리
   String category = request.getParameter("category");
   if (category == null) category = "전체";
   List<String> allowed = Arrays.asList("전체","인기글","동네질문");
   if (!allowed.contains(category)) category = "전체";
 
-  // DB에서 목록 조회
   List<Post> posts;
   try (PostDAO dao = new PostDAO()) {
       posts = dao.list(category);
@@ -38,7 +35,6 @@
 
   <style>
     body { background:#f8f9fa; }
-    .site-footer small{ color:#dee2e6; }
   </style>
 
 </head>
@@ -61,7 +57,7 @@
   <main class="container flex-grow-1 pb-5">
     <div class="row">
 
-      <!-- 사이드 -->
+      <!-- 좌측 -->
       <aside class="col-md-3 mb-5">
         <div class="list-group shadow-sm">
           <a href="<%=ctx%>/community.jsp?category=전체"
@@ -78,8 +74,7 @@
         </div>
       </aside>
 
-      <!-- 목록 -->
-
+      <!-- 게시글 목록 -->
       <section class="col-md-9 mb-5">
         <div class="d-flex align-items-center gap-2 mb-2">
           <h4 class="fw-bold mb-0"><%= safeCategory %> 게시글</h4>
@@ -87,44 +82,89 @@
         </div>
 
         <% if (posts.isEmpty()) { %>
-          <div class="alert alert-info">해당 카테고리에는 게시글이 없습니다.</div>
+          <div class="alert alert-info">해당 카테고리에 게시글이 없습니다.</div>
         <% } else { %>
 
-          <div class="row row-cols-1 g-3">
+        <div class="row row-cols-1 g-3">
 
-          <% for (Post p : posts) {
+        <% for (Post p : posts) {
 
-              String title = (p.getTitle()==null?"":p.getTitle())
-                 .replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
-                 .replace("\"","&quot;").replace("'","&#39;");
+            String title = (p.getTitle()==null?"":p.getTitle())
+                .replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
+                .replace("\"","&quot;").replace("'","&#39;");
 
-              String dateStr = (p.getCreatedAt()==null) ? "" :
+            String dateStr = (p.getCreatedAt()==null) ? "" :
                    new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm").format(p.getCreatedAt());
-          %>
 
-            <div class="col">
-              <div class="card h-100 shadow-sm">
-                <div class="card-body position-relative">
+            boolean isBest = (p.getLikes() >= 5 && p.getDislikes() <= 3);
+        %>
 
-                  <!-- 제목(링크) -->
-                  <a href="<%=ctx%>/post.jsp?id=<%=p.getId()%>"
-                     class="stretched-link text-decoration-none">
-                    <h5 class="card-title text-dark mb-1"><%= title %></h5>
+          <div class="col">
+            <div class="card h-100 shadow-sm">
+              <div class="card-body">
+
+                <!-- 제목 + BEST -->
+                <h5 class="card-title text-dark mb-1 d-flex align-items-center gap-2">
+                  <a href="<%=ctx%>/post.jsp?id=<%=p.getId()%>" class="text-dark text-decoration-none">
+                    <%= title %>
                   </a>
 
-                  <p class="card-text text-muted small mb-2">
-                    <%= p.getAuthor() %> · <%= dateStr %>
-                  </p>
+                  <span class="badge rounded-pill bg-success best-badge"
+                        style="<%= isBest ? "" : "display:none;" %>">
+                    BEST
+                  </span>
+                </h5>
+
+                <!-- 작성자 -->
+                <p class="text-muted small mb-2">
+                  <%= p.getAuthor() %> · <%= dateStr %>
+                </p>
+
+                <!-- 좋아요/싫어요 + 신고버튼 오른쪽 정렬 -->
+                <div class="d-flex align-items-center justify-content-between">
+
+                  <!-- 왼쪽: 좋아요/싫어요 -->
+                  <div class="d-flex align-items-center gap-2">
+                    <button type="button"
+                            class="btn btn-sm btn-outline-primary btn-like"
+                            data-id="<%=p.getId()%>">
+                      👍 <span class="like-count"><%= p.getLikes() %></span>
+                    </button>
+
+                    <button type="button"
+                            class="btn btn-sm btn-outline-secondary btn-dislike"
+                            data-id="<%=p.getId()%>">
+                      👎 <span class="dislike-count"><%= p.getDislikes() %></span>
+                    </button>
+                  </div>
+
+                  <!-- 오른쪽: 신고 버튼/배지 -->
+                  <div class="right-area">
+                    <% if (p.getDislikes() >= 7 && p.getReports() < 7) { %>
+                      <button type="button"
+                              class="btn btn-sm btn-outline-danger btn-report"
+                              data-id="<%=p.getId()%>">
+                        🚨 신고
+                      </button>
+                    <% } %>
+
+                    <% if (p.getReports() >= 7) { %>
+                      <span class="badge bg-danger report-badge">🚨 신고 누적됨</span>
+                    <% } %>
+                  </div>
 
 
                 </div>
+
               </div>
             </div>
-
-          <% } %>
           </div>
 
         <% } %>
+
+        </div>
+        <% } %>
+
       </section>
     </div>
   </main>
@@ -132,10 +172,147 @@
 
   <footer class="mt-auto py-4 bg-dark text-light">
     <div class="container text-center">
-      <small>Copyright © 플랩풋볼 <%= java.time.Year.now() %></small>
+      <small>Copyright © 볼피또 <%= java.time.Year.now() %></small>
     </div>
   </footer>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+  const loginUser = "<%= (loginUser != null ? loginUser.getUsername() : "") %>";
+
+  // 공통: 신고 UI 업데이트
+  function updateReportUI(container, data) {
+    const rightArea   = container.querySelector(".right-area");
+    let reportBtn     = rightArea.querySelector(".btn-report");
+    let reportBadge   = rightArea.querySelector(".report-badge");
+
+    // 이미 신고 누적 상태라면 배지만 보여주기
+    if (data.reports >= 1) {
+      if (reportBtn) reportBtn.remove();
+      if (!reportBadge) {
+        reportBadge = document.createElement("span");
+        reportBadge.className = "badge bg-danger report-badge";
+        reportBadge.textContent = "🚨 신고 누적됨";
+        rightArea.appendChild(reportBadge);
+      } else {
+        reportBadge.style.display = "inline-block";
+      }
+      return;
+    }
+
+    // 아직 신고 누적은 아니지만, 싫어요 7 이상이면 신고 버튼 노출
+    if (data.dislikes >= 7) {
+      if (!reportBtn) {
+        reportBtn = document.createElement("button");
+        reportBtn.className = "btn btn-sm btn-outline-danger btn-report";
+        reportBtn.dataset.id = data.id;
+        reportBtn.textContent = "🚨 신고";
+        rightArea.appendChild(reportBtn);
+
+        reportBtn.addEventListener("click", () => {
+          sendAction(data.id, "report", { container });
+        });
+      } else {
+        reportBtn.style.display = "inline-block";
+      }
+    } else {
+      // 싫어요 7 미만이면 신고 버튼 숨김
+      if (reportBtn) reportBtn.style.display = "none";
+    }
+  }
+
+  // AJAX 공통 함수
+  function sendAction(postId, action, elems) {
+
+    if (!loginUser) {
+      alert("로그인 후 이용 가능합니다.");
+      return;
+    }
+
+    fetch("<%=ctx%>/post-like", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
+      body: new URLSearchParams({ id: postId, action: action })
+    })
+    .then(res => res.json())
+    .then(data => {
+      console.log("post-like 응답:", data);
+
+      // ok 필드가 있고 false면 실패로 처리
+      if (data.ok === false) {
+        if (action === "report") {
+          alert("이미 신고 완료되었습니다.");
+        }
+        return;
+      }
+
+      const container = elems.container;
+      const likeSpan = container.querySelector(".like-count");
+      const dislikeSpan = container.querySelector(".dislike-count");
+      const bestBadge = container.querySelector(".best-badge");
+
+      // 숫자 업데이트
+      if (likeSpan && typeof data.likes === "number") {
+        likeSpan.textContent = data.likes;
+      }
+      if (dislikeSpan && typeof data.dislikes === "number") {
+        dislikeSpan.textContent = data.dislikes;
+      }
+
+      // BEST 토글
+      if (bestBadge && typeof data.likes === "number" && typeof data.dislikes === "number") {
+        const isBest = (data.likes >= 5 && data.dislikes <= 3);
+        bestBadge.style.display = isBest ? "inline-block" : "none";
+      }
+
+      // 신고일 경우 알림 + 신고 UI 갱신
+      if (action === "report") {
+        alert("신고가 접수되었습니다.");
+      }
+
+      // 신고/싫어요 관련 UI 갱신
+      // (data.id, data.dislikes, data.reports 가 넘어온다고 가정)
+      if (!data.id) data.id = postId;
+      updateReportUI(container, data);
+    })
+    .catch(err => {
+      console.error("post-like 에러:", err);
+      if (action === "report") {
+        alert("신고 처리 중 오류가 발생했습니다.");
+      }
+    });
+  }
+
+  // 좋아요
+  document.querySelectorAll(".btn-like").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const card = btn.closest(".card-body");
+      const postId = btn.dataset.id;
+      sendAction(postId, "like", { container: card });
+    });
+  });
+
+  // 싫어요
+  document.querySelectorAll(".btn-dislike").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const card = btn.closest(".card-body");
+      const postId = btn.dataset.id;
+      sendAction(postId, "dislike", { container: card });
+    });
+  });
+
+  // 초기 신고 버튼 (이미 7 이상인 경우)
+  document.querySelectorAll(".btn-report").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const card = btn.closest(".card-body");
+      const postId = btn.dataset.id;
+      sendAction(postId, "report", { container: card });
+    });
+  });
+
+});
+</script>
+
 </body>
 </html>

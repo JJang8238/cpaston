@@ -149,17 +149,42 @@ let userCenter = null;
 let markers = [];
 let currentPlaceName = null;
 
+// ✅ 명확히 선언(암묵 전역 방지)
+let userMarkerImage = null;
+let placeMarkerImage = null;
+
+// 위치 옵션(정확도/타임아웃/캐시)
+const GEO_OPTS = {
+    enableHighAccuracy: true,
+    timeout: 10000,
+    maximumAge: 0
+};
+
 // 날짜 기본값 = 오늘
 document.addEventListener("DOMContentLoaded", function() {
     const today = new Date().toISOString().split("T")[0];
     document.getElementById("matchDate").value = today;
+
+    // 🔥 지도 로딩과 상관없이 버튼 이벤트를 먼저 바인딩
+    document.getElementById("btnRelocate").addEventListener("click", relocateToMe);
+    document.getElementById("btnSearch").addEventListener("click", searchFromCurrentMapCenter);
+    document.getElementById("selRadius").addEventListener("change", () => {
+        if (!userCenter) return;
+        drawRadius();
+        searchAround();
+    });
 });
 
 /* 지도 초기화 */
 function initAppKakao() {
     navigator.geolocation.getCurrentPosition(
         pos => createMap(pos.coords.latitude, pos.coords.longitude),
-        () => createMap(37.5665, 126.9780)
+        err => {
+            console.warn("📌 Geolocation failed on init:", err);
+            // 실패 시 서울 시청 기본 좌표
+            createMap(37.5665, 126.9780);
+        },
+        GEO_OPTS
     );
 }
 
@@ -198,24 +223,11 @@ function createMap(lat, lng) {
 
     drawUserSpot();
     searchAround();
-
-    document.getElementById("btnRelocate").onclick = relocateToMe;
-
-    /* 🔥🔥 여기 수정됨 — “이 위치에서 검색” 버튼 */
-    document.getElementById("btnSearch").onclick = () => {
-        const c = kakaoMap.getCenter();        // 지도 중심 좌표 읽기
-        userCenter = { lat: c.getLat(), lng: c.getLng() };
-        drawUserSpot();                        // 내 위치 마커 재설정
-        searchAround();                        // 주변 다시 검색
-    };
-
-    document.getElementById("selRadius").onchange = () => {
-        drawRadius();
-        searchAround();
-    };
 }
 
 function drawUserSpot() {
+    if (!userCenter || !kakaoMap) return;
+
     if (userMarker) userMarker.setMap(null);
 
     userMarker = new kakao.maps.Marker({
@@ -228,6 +240,8 @@ function drawUserSpot() {
 }
 
 function drawRadius() {
+    if (!userCenter || !kakaoMap) return;
+
     const r = Number(document.getElementById("selRadius").value);
     if (radiusCircle) radiusCircle.setMap(null);
 
@@ -250,6 +264,8 @@ function clearPlaceMarkers() {
 }
 
 function searchAround() {
+    if (!kakaoPlaces || !userCenter) return;
+
     clearPlaceMarkers();
 
     const r = Number(document.getElementById("selRadius").value);
@@ -458,16 +474,57 @@ function cancelReserve(matchId) {
     });
 }
 
+// 🔥 현재 위치로 버튼용 (지도 준비 여부 체크 + 오류 상세)
 function relocateToMe() {
+    if (!navigator.geolocation) {
+        alert("이 브라우저는 위치 기능을 지원하지 않습니다.");
+        return;
+    }
+
     navigator.geolocation.getCurrentPosition(
         pos => {
             userCenter = {lat:pos.coords.latitude, lng:pos.coords.longitude};
-            kakaoMap.setCenter(new kakao.maps.LatLng(userCenter.lat, userCenter.lng));
-            drawUserSpot();
-            searchAround();
+
+            if (kakaoMap) {
+                kakaoMap.setCenter(new kakao.maps.LatLng(userCenter.lat, userCenter.lng));
+                drawUserSpot();
+                searchAround();
+            } else {
+                // 지도 아직 안 만들어진 경우 → 중심만 저장해두고, 지도 생성 후 반영
+                console.log("지도 로딩 전 위치만 갱신:", userCenter);
+            }
         },
-        () => alert("위치를 가져올 수 없습니다")
+        err => {
+            console.warn("📌 Geolocation error:", err);
+
+            switch (err.code) {
+                case err.PERMISSION_DENIED:
+                    alert("위치 권한이 거부됐어요. 브라우저 주소창 옆 🔒/📍에서 위치 허용으로 바꿔줘!");
+                    break;
+                case err.POSITION_UNAVAILABLE:
+                    alert("현재 위치 정보를 가져올 수 없어요. GPS/네트워크 상태를 확인해줘!");
+                    break;
+                case err.TIMEOUT:
+                    alert("위치 요청 시간이 초과됐어요. 다시 눌러줘!");
+                    break;
+                default:
+                    alert("위치를 가져올 수 없습니다.");
+            }
+        },
+        GEO_OPTS
     );
+}
+
+// 🔥 “이 위치에서 검색” 버튼용
+function searchFromCurrentMapCenter() {
+    if (!kakaoMap) {
+        alert("지도가 아직 로딩 중이야. 잠깐만 기다렸다가 다시 눌러줘!");
+        return;
+    }
+    const c = kakaoMap.getCenter();
+    userCenter = { lat: c.getLat(), lng: c.getLng() };
+    drawUserSpot();
+    searchAround();
 }
 
 function hideReviewPanel(){

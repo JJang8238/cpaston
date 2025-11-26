@@ -1,9 +1,15 @@
 package dao;
 
 import java.sql.*;
+import java.util.List;
+import java.util.ArrayList;
 import dto.User;
 import util.DBConnection;
 import util.PasswordUtil;  // SHA-256 해시 유틸
+import java.util.List;
+import java.util.ArrayList;
+
+
 
 public class UserDAO implements AutoCloseable {
 
@@ -80,11 +86,13 @@ public class UserDAO implements AutoCloseable {
                     User user = new User();
                     user.setId(rs.getInt("id"));
                     user.setUsername(rs.getString("username"));
+
                     user.setPassword(rs.getString("password")); // 해시
                     user.setName(rs.getString("name"));
                     try { user.setRole(rs.getString("role")); } catch (SQLException ignore) {}
                     try { user.setEmail(rs.getString("email")); } catch (SQLException ignore) {}
                     try { user.setEmailVerified(rs.getInt("email_verified")); } catch (SQLException ignore) {}
+                    try { user.setProfileImage(rs.getString("profile_image")); } catch (SQLException ignore) {}
                     return user;
                 }
             }
@@ -177,8 +185,10 @@ public class UserDAO implements AutoCloseable {
         try { user.setRole(rs.getString("role")); } catch (SQLException ignore) {}
         try { user.setEmail(rs.getString("email")); } catch (SQLException ignore) {}
         try { user.setEmailVerified(rs.getInt("email_verified")); } catch (SQLException ignore) {}
+        try { user.setProfileImage(rs.getString("profile_image")); } catch (SQLException ignore) {}
         return user;
     }
+
 
     // ----------------------------------------------------------------
     // 6) 회원 정보 수정 (이름, 이메일, 비밀번호, 프로필 이미지)
@@ -221,8 +231,64 @@ public class UserDAO implements AutoCloseable {
         return false;
     }
 
+ 
+    // ============================================================
+    // ✔ 7) 관리자: 전체 회원 목록 조회 기능 추가
+    // ============================================================
+    public List<User> getAllUsers() {
+        List<User> list = new ArrayList<>();
+        String sql = "SELECT * FROM user ORDER BY id DESC";
+
+        try (PreparedStatement ps = getConn().prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                User u = new User();
+                u.setId(rs.getInt("id"));
+                u.setUsername(rs.getString("username"));
+                u.setName(rs.getString("name"));
+                u.setEmail(rs.getString("email"));
+                u.setRole(rs.getString("role"));
+                list.add(u);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    // ============================================================
+    // ✔ 8) 관리자: 회원 삭제 기능
+    // ============================================================
+    public boolean deleteUser(int id) {
+        String sql = "DELETE FROM user WHERE id = ?";
+        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate() == 1;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+	// ============================================================
+    // 9) 관리자: 회원 권한(role) 변경
+    // ============================================================
+   public boolean updateUserRole(int id, String role) {
+        String sql = "UPDATE user SET role=? WHERE id=?";
+        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+            ps.setString(1, role);
+            ps.setInt(2, id);
+            return ps.executeUpdate() == 1;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    
     // ----------------------------------------------------------------
-    // 7) 리소스 정리: try-with-resources에서 자동 호출
+    // 10) 리소스 정리: try-with-resources에서 자동 호출
     // ----------------------------------------------------------------
     @Override
     public void close() {

@@ -108,7 +108,7 @@ public class MatchDAO implements AutoCloseable {
     }
 
     /* ===========================================================
-        ⭐ 특정 사용자가 특정 경기를 예약했는지
+        ⭐ 특정 사용자가 특정 경기를 예약했는지 확인
        =========================================================== */
     public boolean isUserReserved(int userId, int matchId) {
         String sql = "SELECT COUNT(*) FROM reservations WHERE user_id=? AND match_reservation_id=?";
@@ -230,7 +230,7 @@ public class MatchDAO implements AutoCloseable {
     }
 
     /* ===========================================================
-       ⭐ 관리자 — 전체 경기 조회
+        ⭐ 관리자 — 전체 경기 조회
        =========================================================== */
     public List<Match> getAllMatches() {
         List<Match> list = new ArrayList<>();
@@ -248,7 +248,7 @@ public class MatchDAO implements AutoCloseable {
     }
 
     /* ===========================================================
-       ⭐ 관리자 — 단일 경기 조회
+        ⭐ 관리자 — 단일 경기 조회
        =========================================================== */
     public Match getMatchById(int id) {
         String sql = "SELECT * FROM match_reservations WHERE id=?";
@@ -269,7 +269,7 @@ public class MatchDAO implements AutoCloseable {
     }
 
     /* ===========================================================
-       ⭐ 관리자 — 경기 생성
+        ⭐ 관리자 — 경기 생성
        =========================================================== */
     public boolean createMatch(Match m) {
 
@@ -294,7 +294,7 @@ public class MatchDAO implements AutoCloseable {
     }
 
     /* ===========================================================
-       ⭐ 관리자 — 경기 수정 (방법1: 항상 성공 처리)
+        ⭐ 관리자 — 경기 수정
        =========================================================== */
     public boolean updateMatch(Match m) {
 
@@ -312,10 +312,8 @@ public class MatchDAO implements AutoCloseable {
             ps.setInt(4, m.getMaxPlayers());
             ps.setInt(5, m.getId());
 
-            int updated = ps.executeUpdate();
-            System.out.println("💛 UPDATE 실행됨, 영향받은 행 수 = " + updated);
+            ps.executeUpdate();
 
-            // 🔥 방법1 핵심: 영향받은 행 수 상관없이 성공 처리
             return true;
 
         } catch (Exception e) { e.printStackTrace(); }
@@ -324,7 +322,7 @@ public class MatchDAO implements AutoCloseable {
     }
 
     /* ===========================================================
-       ⭐ 관리자 — 경기 삭제
+        ⭐ 관리자 — 경기 삭제
        =========================================================== */
     public boolean deleteMatch(int id) {
         String sql = "DELETE FROM match_reservations WHERE id=?";
@@ -338,7 +336,7 @@ public class MatchDAO implements AutoCloseable {
     }
 
     /* ===========================================================
-       ⭐ getPlaceByMatchId
+        ⭐ getPlaceByMatchId
        =========================================================== */
     public String getPlaceByMatchId(int matchId) {
         String sql = "SELECT location FROM match_reservations WHERE id=?";
@@ -356,7 +354,39 @@ public class MatchDAO implements AutoCloseable {
     }
 
     /* ===========================================================
-       ⭐ ResultSet → DTO 매핑
+        ⭐ 내가 예약한 경기 목록 조회 (✨ 신규 추가)
+       =========================================================== */
+    public List<Match> getMyReservedMatches(int userId) {
+
+        String sql = """
+            SELECT m.*
+            FROM reservations r
+            JOIN match_reservations m
+              ON r.match_reservation_id = m.id
+            WHERE r.user_id = ?
+            ORDER BY m.match_date ASC, m.match_time ASC
+            """;
+
+        List<Match> list = new ArrayList<>();
+
+        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+            ps.setInt(1, userId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(toMatch(rs));
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
+    /* ===========================================================
+        ⭐ ResultSet → DTO 매핑
        =========================================================== */
     private Match toMatch(ResultSet rs) throws SQLException {
         Match m = new Match();
@@ -373,7 +403,7 @@ public class MatchDAO implements AutoCloseable {
     }
 
     /* ===========================================================
-       ⭐ close()
+        ⭐ close()
        =========================================================== */
     @Override
     public void close() {

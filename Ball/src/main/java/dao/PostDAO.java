@@ -354,6 +354,32 @@ public class PostDAO implements AutoCloseable {
 
         return false;
     }
+ // -------------------------------------------------------------------------
+ // 🚨 신고 기준 이상 게시글 목록 조회
+ // -------------------------------------------------------------------------
+ public List<Post> listByReportThreshold(int threshold) {
+
+     final String sql =
+             "SELECT * FROM post WHERE reports >= ? ORDER BY reports DESC, id DESC";
+
+     List<Post> list = new ArrayList<>();
+
+     try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+
+         ps.setInt(1, threshold);
+
+         try (ResultSet rs = ps.executeQuery()) {
+             while (rs.next()) {
+                 list.add(map(rs));
+             }
+         }
+
+     } catch (Exception e) {
+         e.printStackTrace();
+     }
+
+     return list;
+ }
 
     // -------------------------------------------------------------------------
     // DTO 변환
@@ -392,3 +418,4 @@ public class PostDAO implements AutoCloseable {
         } catch (SQLException ignore) {}
     }
 }
+

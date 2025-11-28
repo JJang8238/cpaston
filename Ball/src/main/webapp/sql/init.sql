@@ -194,3 +194,10 @@ CREATE TABLE post_report_log (
     UNIQUE KEY uk_report_unique (post_id, user_id),
     FOREIGN KEY (post_id) REFERENCES post(id) ON DELETE CASCADE
 );
+
+CREATE TABLE notice (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  content TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

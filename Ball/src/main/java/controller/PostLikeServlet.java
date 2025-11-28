@@ -29,12 +29,10 @@ public class PostLikeServlet extends HttpServlet {
             return;
         }
 
-        // ⭐ 여기서는 user의 PK(id)를 사용 (post_vote_log / post_report_log 의 user_id 가 INT 라는 가정)
         int userId = loginUser.getId();
-
         String action = req.getParameter("action");  // like / dislike / report
-        int postId;
 
+        int postId;
         try {
             postId = Integer.parseInt(req.getParameter("id"));
         } catch (Exception e) {
@@ -43,6 +41,7 @@ public class PostLikeServlet extends HttpServlet {
         }
 
         boolean ok = false;
+        boolean duplicate = false;  // 🚨 중복 신고 체크
         Post updated = null;
 
         try (PostDAO dao = new PostDAO()) {
@@ -51,16 +50,18 @@ public class PostLikeServlet extends HttpServlet {
 
                 case "like":
                 case "dislike": {
-                    // 좋아요/싫어요 토글
                     updated = dao.votePost(postId, userId, action);
                     ok = (updated != null);
                     break;
                 }
 
                 case "report": {
-                    // 신고 (한 번만 가능)
+                    // 신고 수행 → false면 중복 신고임
                     ok = dao.addReport(postId, userId);
-                    if (ok) {
+
+                    if (!ok) {
+                        duplicate = true;   // 🚨 이미 신고함
+                    } else {
                         updated = dao.findById(postId);
                     }
                     break;
@@ -76,13 +77,19 @@ public class PostLikeServlet extends HttpServlet {
 
         PrintWriter out = resp.getWriter();
 
+        // 🚨 중복 신고일 경우
+        if (duplicate) {
+            out.print("{\"ok\":false, \"message\":\"already\"}");
+            return;
+        }
+
+        // 실패(like/dislike 실패 시)
         if (!ok || updated == null) {
-            // 신고 중복 등으로 실패했을 때
             out.print("{\"ok\":false}");
             return;
         }
 
-        // 👍 / 👎 / 🚨 모두 공통으로 최신 값 내려줌
+        // 성공 → 좋아요/싫어요/신고수 최신 값 전달
         out.print("{"
                 + "\"ok\":true,"
                 + "\"likes\":" + updated.getLikes() + ","

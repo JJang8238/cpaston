@@ -21,9 +21,9 @@ public class DeletePostServlet extends HttpServlet {
 
         req.setCharacterEncoding("UTF-8");
 
-        // 어디에서 삭제 요청이 왔는지 (community / mypage)
+        // 어디서 요청이 왔는지 (community / mypage / admin)
         String from = req.getParameter("from");
-        if (from == null) from = "community";  // 기본값
+        if (from == null) from = "community";
 
         // 로그인 체크
         User loginUser = (User) req.getSession().getAttribute("loginUser");
@@ -33,7 +33,26 @@ public class DeletePostServlet extends HttpServlet {
         }
 
         String loginUsername = loginUser.getUsername();
-        int postId = Integer.parseInt(req.getParameter("postId"));
+        String loginRole = loginUser.getRole();   // 🔥 admin 여부 체크
+
+        // -----------------------------
+        // 🔥 postId 또는 id 모두 허용
+        // -----------------------------
+        int postId = 0;
+
+        try {
+            if (req.getParameter("postId") != null) {
+                postId = Integer.parseInt(req.getParameter("postId"));
+            } else if (req.getParameter("id") != null) {
+                postId = Integer.parseInt(req.getParameter("id"));
+            } else {
+                throw new Exception("잘못된 파라미터");
+            }
+        } catch (Exception e) {
+            resp.setContentType("text/html; charset=UTF-8");
+            resp.getWriter().println("<script>alert('잘못된 게시글 번호입니다.'); history.back();</script>");
+            return;
+        }
 
         try (PostDAO dao = new PostDAO()) {
 
@@ -46,8 +65,11 @@ public class DeletePostServlet extends HttpServlet {
                 return;
             }
 
-            // 작성자 검증
-            if (!post.getAuthor().equals(loginUsername)) {
+            // ----------------------------------------
+            // 🔥 일반 사용자는 본인 글만 삭제 가능
+            // 🔥 관리자(admin)은 모든 글 삭제 가능
+            // ----------------------------------------
+            if (!"admin".equals(loginRole) && !post.getAuthor().equals(loginUsername)) {
                 resp.setContentType("text/html; charset=UTF-8");
                 resp.getWriter().println("<script>alert('본인이 작성한 글만 삭제할 수 있습니다.'); history.back();</script>");
                 return;
@@ -58,11 +80,18 @@ public class DeletePostServlet extends HttpServlet {
 
             if (result > 0) {
 
-                // 🔥 삭제 성공 시 돌아갈 위치 구분
-                if ("mypage".equals(from)) {
-                    resp.sendRedirect("mypage.jsp");
-                } else {
-                    resp.sendRedirect("community.jsp");
+                // 🔥 삭제 성공 후 이동 경로 구분
+                switch (from) {
+                    case "mypage":
+                        resp.sendRedirect("mypage.jsp");
+                        break;
+
+                    case "admin":
+                        resp.sendRedirect("admin/admin_menu.jsp?page=report");
+                        break;
+
+                    default:
+                        resp.sendRedirect("community.jsp");
                 }
 
             } else {

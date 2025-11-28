@@ -18,6 +18,9 @@ public class ReservationController extends HttpServlet {
 
     private final MatchDAO matchDAO = new MatchDAO();
 
+    /* ============================================================
+       GET : 경기 불러오기 / 리뷰 가능 여부 확인
+       ============================================================ */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -27,17 +30,16 @@ public class ReservationController extends HttpServlet {
 
         String action = request.getParameter("action");
         String place  = request.getParameter("place");
-        String date   = request.getParameter("date");   // 🔥 추가: 날짜(YYYY-MM-DD) 파라미터
+        String date   = request.getParameter("date");
 
         HttpSession session = request.getSession(false);
         User user = (session != null) ? (User) session.getAttribute("loginUser") : null;
+
         int userId = (user != null) ? user.getId() : -1;
 
-        /* -------------------------------------------------------
-            1) 해당 장소 기준으로 경기 일정 불러오기
-               - date가 없으면 오늘 기준
-               - date가 있으면 해당 날짜 기준
-        ------------------------------------------------------- */
+        /* -----------------------------------------------------------
+            1) 장소 기준 일정 조회
+        ----------------------------------------------------------- */
         if ("matchesByPlace".equals(action) && place != null) {
 
             List<Match> matches = matchDAO.getMatchesByPlace(place, date);
@@ -56,30 +58,23 @@ public class ReservationController extends HttpServlet {
                 arr.add(obj);
             }
 
-            PrintWriter out = response.getWriter();
-            out.write(arr.toString());
-            out.flush();
+            response.getWriter().write(arr.toString());
             return;
         }
 
-        /* -------------------------------------------------------
-            2) 리뷰 작성 가능 여부 확인
-               → 해당 장소 + 날짜의 경기 중 사용자가 예약한 적 있으면 true
-               → date 없으면 오늘 기준
-        ------------------------------------------------------- */
+        /* -----------------------------------------------------------
+            2) 리뷰 작성 가능 여부
+        ----------------------------------------------------------- */
         else if ("canReview".equals(action) && place != null) {
 
             JsonObject result = new JsonObject();
 
             if (userId == -1) {
-                // 로그인 안한 경우
                 result.addProperty("can", false);
-                PrintWriter out = response.getWriter();
-                out.write(result.toString());
+                response.getWriter().write(result.toString());
                 return;
             }
 
-            // 해당 장소 + 날짜의 경기 목록
             List<Match> matches = matchDAO.getMatchesByPlace(place, date);
 
             boolean can = false;
@@ -91,59 +86,90 @@ public class ReservationController extends HttpServlet {
             }
 
             result.addProperty("can", can);
-
-            PrintWriter out = response.getWriter();
-            out.write(result.toString());
+            response.getWriter().write(result.toString());
             return;
         }
 
         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
     }
 
-    /* -------------------------------------------------------
-        POST: 예약 처리 (예약/취소)
-    ------------------------------------------------------- */
+
+
+    /* ============================================================
+       POST : 예약 / 취소
+       ============================================================ */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         request.setCharacterEncoding("UTF-8");
-        response.setContentType("application/json; charset=UTF-8");
 
-        PrintWriter out = response.getWriter();
         String action = request.getParameter("action");
 
         HttpSession session = request.getSession(false);
         User user = (session != null) ? (User) session.getAttribute("loginUser") : null;
 
-        // 로그인되어 있어야 예약 가능
         if (user == null) {
-            out.write("{\"ok\":false,\"msg\":\"로그인이 필요합니다.\"}");
+            response.sendRedirect("login.jsp");
             return;
         }
 
         int userId = user.getId();
+        int matchId = Integer.parseInt(request.getParameter("matchId"));
 
-        try {
-            int matchId = Integer.parseInt(request.getParameter("matchId"));
+        // 🔥 AJAX 여부 판단
+        boolean isAjax = "XMLHttpRequest".equals(request.getHeader("X-Requested-With"));
 
+        try (PrintWriter out = response.getWriter()) {
+
+            /* ---------------------------------------------------------
+                1) 예약하기
+            --------------------------------------------------------- */
             if ("book".equals(action)) {
+
                 boolean ok = matchDAO.bookMatch(userId, matchId);
-                String place = matchDAO.getPlaceByMatchId(matchId);
-                out.write("{\"ok\":" + ok + ",\"place\":\"" + place + "\"}");
+
+                response.setContentType("application/json; charset=UTF-8");
+                out.write("{\"ok\":" + ok + "}");
+                return;
             }
+
+            /* ---------------------------------------------------------
+                2) 예약 취소
+            --------------------------------------------------------- */
             else if ("cancel".equals(action)) {
+
                 boolean ok = matchDAO.cancelReservation(userId, matchId);
-                String place = matchDAO.getPlaceByMatchId(matchId);
-                out.write("{\"ok\":" + ok + ",\"place\":\"" + place + "\"}");
+
+                /* -------------------------
+                   🔥 Form 요청 (마이페이지)
+                   → redirect
+                ------------------------- */
+                if (!isAjax) {
+                    session.setAttribute("msg", ok ? "예약이 취소되었습니다." : "예약 취소 실패!");
+                    response.sendRedirect("mypage.jsp");
+                    return;
+                }
+
+                /* -------------------------
+                   🔥 AJAX 요청 (경기장 페이지)
+                   → JSON 반환
+                ------------------------- */
+                response.setContentType("application/json; charset=UTF-8");
+                out.write("{\"ok\":" + ok + "}");
+                return;
             }
+
+            /* ---------------------------------------------------------
+                3) 잘못된 action
+            --------------------------------------------------------- */
             else {
+                response.setContentType("application/json; charset=UTF-8");
                 out.write("{\"ok\":false,\"msg\":\"올바르지 않은 요청입니다.\"}");
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            out.write("{\"ok\":false,\"msg\":\"예외가 발생했습니다.\"}");
         }
     }
 }

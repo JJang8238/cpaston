@@ -57,9 +57,9 @@ public class PostDAO implements AutoCloseable {
         String base = "SELECT * FROM post";
         String order =
                 " ORDER BY " +
-                " CASE WHEN likes >= 5 AND dislikes <= 3 THEN 1 ELSE 0 END DESC, " +
-                " (likes - dislikes) DESC, " +
-                " id DESC";
+                        " CASE WHEN likes >= 5 AND dislikes <= 3 THEN 1 ELSE 0 END DESC, " +
+                        " (likes - dislikes) DESC, " +
+                        " id DESC";
 
         String sql;
         boolean bindCategory = false;
@@ -240,7 +240,7 @@ public class PostDAO implements AutoCloseable {
 
             final String aggSql =
                     "SELECT SUM(vote_type='like') AS likes, SUM(vote_type='dislike') AS dislikes " +
-                    "FROM post_vote_log WHERE post_id=?";
+                            "FROM post_vote_log WHERE post_id=?";
 
             try (PreparedStatement ps = c.prepareStatement(aggSql)) {
                 ps.setInt(1, postId);
@@ -381,6 +381,37 @@ public class PostDAO implements AutoCloseable {
      return list;
  }
 
+
+    // -------------------------------------------------------------------------
+    // 🚨 신고 기준 이상 게시글 목록 가져오기 (관리자 페이지용)
+    // -------------------------------------------------------------------------
+    public List<Post> listByReportThreshold(int threshold) {
+
+        String sql =
+            "SELECT * FROM post " +
+            "WHERE reports >= ? " +
+            "ORDER BY reports DESC, created_at DESC";
+
+        List<Post> list = new ArrayList<>();
+
+        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+
+            ps.setInt(1, threshold);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(map(rs));
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
+
     // -------------------------------------------------------------------------
     // DTO 변환
     // -------------------------------------------------------------------------
@@ -396,17 +427,17 @@ public class PostDAO implements AutoCloseable {
         p.setCreatedAt(rs.getTimestamp("created_at"));
         p.setUpdatedAt(rs.getTimestamp("updated_at"));
 
-        try {
-            p.setLikes(rs.getInt("likes"));
-        } catch (SQLException ignore) {}
+        // 👍 좋아요
+        int likes = rs.getInt("likes");
+        p.setLikes(rs.wasNull() ? 0 : likes);
 
-        try {
-            p.setDislikes(rs.getInt("dislikes"));
-        } catch (SQLException ignore) {}
+        // 👎 싫어요
+        int dislikes = rs.getInt("dislikes");
+        p.setDislikes(rs.wasNull() ? 0 : dislikes);
 
-        try {
-            p.setReports(rs.getInt("reports"));
-        } catch (SQLException ignore) {}
+        // 🚨 신고수  (🔥 문제 해결 포인트)
+        int reports = rs.getInt("reports");
+        p.setReports(rs.wasNull() ? 0 : reports);
 
         return p;
     }

@@ -29,6 +29,7 @@
 
     boolean isBest = (post.getLikes() >= 5 && post.getDislikes() <= 3);
 
+    // --- 댓글 저장용(임시 메모리) ---
     Map<Integer, List<String>> COMMENTS = (Map<Integer, List<String>>) application.getAttribute("COMMENTS_BY_ID");
     if (COMMENTS == null) {
         COMMENTS = new LinkedHashMap<>();
@@ -48,24 +49,29 @@
 
     List<String> commentList = COMMENTS.getOrDefault(id, new ArrayList<>());
 
+    // ---- 출력 안전처리 ----
     String safeTitle = (post.getTitle()==null?"":post.getTitle())
             .replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
             .replace("\"","&quot;").replace("'","&#39;");
-    String safeCategory = (post.getCategory()==null?"":post.getCategory())
+
+    String safeBoardName = (post.getBoardName()==null?"":post.getBoardName())
             .replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
             .replace("\"","&quot;").replace("'","&#39;");
+
     String safeAuthor = (post.getAuthor()==null?"":post.getAuthor())
             .replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
             .replace("\"","&quot;").replace("'","&#39;");
+
     String safeContent = (post.getContent()==null?"":post.getContent())
             .replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
             .replace("\"","&quot;").replace("'","&#39;")
             .replace("\n","<br/>");
 
+    // --- 목록으로 돌아가기 URL ---
     String backUrl =
         "mypage".equals(from)
         ? ctx + "/mypage.jsp"
-        : ctx + "/community.jsp?category=" + java.net.URLEncoder.encode(post.getCategory(),"UTF-8");
+        : ctx + "/community.jsp?board=" + post.getBoardId();
 %>
 
 <!DOCTYPE html>
@@ -78,6 +84,7 @@
 
 <body class="d-flex flex-column min-vh-100 bg-light">
 
+  <!-- 네비 -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
       <a class="navbar-brand fw-bold" href="<%=ctx%>/community.jsp">볼피또</a>
@@ -92,6 +99,7 @@
         <div class="card shadow-sm mb-4">
           <div class="card-header bg-primary text-white d-flex align-items-center justify-content-between">
             <b><%= safeTitle %></b>
+
             <span id="bestBadge"
                   class="badge bg-light text-success"
                   style="<%= isBest ? "" : "display:none;" %>">
@@ -102,20 +110,20 @@
           <div class="card-body">
             <p class="text-muted mb-2">
               <small>
-                카테고리: <%= safeCategory %>
+                게시판: <%= safeBoardName %>
                 <% if (post.getCreatedAt() != null) { %>
                   · 작성일: <%= new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm").format(post.getCreatedAt()) %>
                 <% } %>
                 · 작성자: <%= safeAuthor %>
               </small>
             </p>
+
             <hr>
             <div><%= safeContent %></div>
 
             <!-- 좋아요 / 싫어요 / 신고 -->
             <div class="mt-4 d-flex align-items-center gap-2">
               <div class="btn-group btn-group-sm" role="group">
-
                 <button type="button" class="btn btn-outline-primary" id="btnLike">
                   👍 좋아요 <span id="likeCount"><%= post.getLikes() %></span>
                 </button>
@@ -123,7 +131,6 @@
                 <button type="button" class="btn btn-outline-secondary" id="btnDislike">
                   👎 싫어요 <span id="dislikeCount"><%= post.getDislikes() %></span>
                 </button>
-
               </div>
 
               <% if (post.getReports() < 7) { %>
@@ -164,9 +171,9 @@
         <!-- 댓글 -->
         <div class="card shadow-sm mb-4">
           <div class="card-header bg-light">
-
             <b>댓글 (<%= commentList.size() %>)</b>
           </div>
+
           <div class="card-body">
             <% if (commentList.isEmpty()) { %>
               <p class="text-muted">아직 댓글이 없습니다.</p>
@@ -192,17 +199,15 @@
             <form action="post.jsp?id=<%=id%>&from=<%=from%>" method="post">
               <textarea name="comment" class="form-control" rows="3" required></textarea>
               <div class="d-flex justify-content-end mt-2">
-
                 <button type="submit" class="btn btn-primary btn-sm">등록</button>
               </div>
             </form>
           </div>
         </div>
 
+        <!-- 뒤로가기 -->
         <div class="mt-3 text-end">
-
           <a href="<%=backUrl%>" class="btn btn-secondary btn-sm">목록으로</a>
-
         </div>
 
       </div>
@@ -247,18 +252,15 @@
           return;
         }
 
-        // 좋아요/싫어요 카운트 갱신
         if (type === "like" || type === "dislike") {
           document.getElementById("likeCount").textContent = data.likes;
           document.getElementById("dislikeCount").textContent = data.dislikes;
 
-          // BEST 뱃지 토글
           const bestBadge = document.getElementById("bestBadge");
           const isBest = (data.likes >= 5 && data.dislikes <= 3);
           bestBadge.style.display = isBest ? "inline-block" : "none";
         }
 
-        // 신고 처리
         if (type === "report") {
           alert("신고가 접수되었습니다.");
           if (data.reports >= 7) {

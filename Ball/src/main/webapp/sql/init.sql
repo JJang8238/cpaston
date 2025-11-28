@@ -80,16 +80,25 @@ CREATE TABLE IF NOT EXISTS place_reviews (
 -- 데모용 --
 INSERT INTO match_reservations (match_date, match_time, location, current_players, max_players)
 VALUES (CURDATE(), '18:00:00', '증산체육공원', 4, 16);
-
-
+/*--------------------------------------------
+--여기 업데이트함--
+-----------------------------------------------*/
 CREATE TABLE IF NOT EXISTS post (
-  id           INT AUTO_INCREMENT PRIMARY KEY,
-  title        VARCHAR(200)  NOT NULL,
-  content      MEDIUMTEXT    NOT NULL,
-  category     ENUM('전체','인기글','동네질문') NOT NULL DEFAULT '전체',
-  author       VARCHAR(100)  NOT NULL,             -- 작성자 표시용(세션의 username)
-  created_at   TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at   TIMESTAMP     NULL ON UPDATE CURRENT_TIMESTAMP
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(200) NOT NULL,
+  content MEDIUMTEXT NOT NULL,
+  author VARCHAR(100) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
+
+  likes INT DEFAULT 0,
+  dislikes INT DEFAULT 0,
+  reports INT DEFAULT 0,
+
+  board_id INT NOT NULL DEFAULT 1,
+  FOREIGN KEY (board_id) REFERENCES board(id)
+    ON UPDATE CASCADE ON DELETE CASCADE
+
 );
 
   SELECT id, username, name, email_verified
@@ -201,3 +210,56 @@ CREATE TABLE notice (
   content TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+/* ============================================================
+4) 게시판 board — 신규 구조 유지
+   🔥 기존 category ENUM(전체/인기글/동네질문)을 대체함
+============================================================ */
+CREATE TABLE board (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(50) UNIQUE NOT NULL,
+  sort_order INT NOT NULL DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 기본 3개 게시판
+INSERT INTO board (name, sort_order) VALUES
+('전체', 1),
+('인기글', 2),
+('동네질문', 3);
+
+
+/* ============================================================
+ 5) 게시글 post — 완전 통합판
+   🔥 category(ENUM) 제거
+   🔥 기존 board_id 삭제 후 재추가 문제 해결
+============================================================ */
+CREATE TABLE post (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(200) NOT NULL,
+  content MEDIUMTEXT NOT NULL,
+
+  /*  
+   🔥🔥🔥 주석 설명:
+   기존에는 category ENUM('전체','인기글','동네질문') 으로 관리했음.
+   현재 프로젝트는 "board" 테이블 기반이므로 category는 삭제.
+  */
+
+  author VARCHAR(100) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
+
+  likes INT DEFAULT 0,
+  dislikes INT DEFAULT 0,
+  reports INT DEFAULT 0,
+
+  /*  
+   🔥 최종 board_id (외래키)
+   - 더 이상 DROP/ADD 반복 없음
+   - project DAO(PostDAO)와 정확히 일치
+  */
+  board_id INT NOT NULL DEFAULT 1,
+  FOREIGN KEY (board_id) REFERENCES board(id)
+        ON UPDATE CASCADE ON DELETE CASCADE
+);
+

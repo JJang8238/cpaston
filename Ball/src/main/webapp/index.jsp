@@ -1,4 +1,3 @@
-
 <%@ page contentType="text/html; charset=UTF-8" language="java" pageEncoding="UTF-8" session="true" %>
 <%@ page import="java.util.*, java.net.URLEncoder" %>
 <%@ page import="dao.MatchDAO, dto.Match" %>
@@ -13,7 +12,7 @@
     String username = (String) session.getAttribute("username");
     boolean loggedIn = (userObj != null) || (username != null);
 
-    // ▼ 오늘 경기 5개만 표시
+    // ▼ 오늘 경기 5개
     MatchDAO matchDAO = new MatchDAO();
     List<Match> matchList = matchDAO.getTodayMatches();
     if (matchList.size() > 5) matchList = matchList.subList(0, 5);
@@ -23,29 +22,27 @@
     java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd (E)");
     String todayStr = today.format(fmt);
 
-    // ▼ 선택된 카드 (matches / community / reviews)
+    // ▼ 어떤 카드가 선택되었는지
     String v = request.getParameter("v");
     if (v == null) v = "matches";
 
-    // 버튼 스타일 토글
     String btnMatches = v.equals("matches")   ? "btn-primary" : "btn-outline-primary";
     String btnComm    = v.equals("community") ? "btn-primary" : "btn-outline-primary";
     String btnReview  = v.equals("reviews")   ? "btn-primary" : "btn-outline-primary";
 
-    // ▼ 커뮤니티 최신 4개 (PostDAO 사용, post 테이블에서 가져옴)
-    List<Post> previewPosts;
-    try (PostDAO pdao = new PostDAO()) {
-        // 전체 글에서 최신순으로 가져오고, 4개만 잘라 사용
-        previewPosts = pdao.list("전체");
-    }
-    if (previewPosts == null) {
-        previewPosts = new ArrayList<>();
-    }
-    if (previewPosts.size() > 4) {
-        previewPosts = previewPosts.subList(0, 4);
-    }
+    // ---------------------------------------------
+    // ▼ 커뮤니티 최신 글 4개 : board_id = 1 기반
+    // ---------------------------------------------
+    List<Post> previewPosts = new ArrayList<>();
 
-    // 로그인 유도 URL (리뷰용)
+    try (PostDAO pdao = new PostDAO()) {
+        // 전체 게시판(board_id=1)의 최신 글 가져오기
+        previewPosts = pdao.listByBoardId(1);
+    }
+    if (previewPosts == null) previewPosts = new ArrayList<>();
+    if (previewPosts.size() > 4) previewPosts = previewPosts.subList(0, 4);
+
+    // 로그인 유도 URL (리뷰 페이지 이동)
     String loginForReview = ctx + "/login.jsp?redirect=" + URLEncoder.encode("reviews.jsp", "UTF-8");
 %>
 
@@ -57,7 +54,11 @@
     <title>볼피또</title>
     <link href="<%=ctx%>/css/styles.css" rel="stylesheet" />
     <style>
-        .preview-card .list-group-item { display:flex; justify-content:space-between; align-items:center; }
+        .preview-card .list-group-item { 
+            display:flex; 
+            justify-content:space-between; 
+            align-items:center; 
+        }
         .section-muted { color:#6c757d; }
     </style>
 </head>
@@ -75,7 +76,7 @@
     </div>
 </nav>
 
-<!-- HERO -->
+<!-- HERO 영역 -->
 <div class="container px-4 px-lg-5">
 
     <div class="row gx-4 gx-lg-5 align-items-center my-5">
@@ -89,7 +90,7 @@
         </div>
     </div>
 
-    <!-- 기능 카드 -->
+    <!-- 기능 카드 3개 -->
     <div class="row text-center mb-4">
 
         <!-- 경기 매칭 -->
@@ -127,10 +128,10 @@
 
     </div>
 
-    <!-- ▼ 프리뷰 -->
+    <!-- ▼ 프리뷰 출력 영역 -->
     <div id="preview" class="preview-card mb-5">
 
-    <%-- ---------------------- 경기 매칭 PREVIEW ---------------------- --%>
+    <%-- ---------------------- 경기 PREVIEW ---------------------- --%>
     <% if ("matches".equals(v)) { %>
 
         <h2 class="fw-bold mb-1">오늘의 경기 예약 현황</h2>
@@ -173,7 +174,7 @@
             %>
                 <div class="list-group-item d-flex justify-content-between">
                     <span><%= title %> (작성자: <%= p.getAuthor() %>, <%= dateStr %>)</span>
-                    <a class="btn btn-outline-secondary btn-sm" href="<%=ctx%>/login.jsp">자세히</a>
+                    <a class="btn btn-outline-secondary btn-sm" href="<%=ctx%>/post.jsp?id=<%=p.getId()%>">자세히</a>
                 </div>
             <% } %>
             </div>

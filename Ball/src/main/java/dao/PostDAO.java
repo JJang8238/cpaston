@@ -29,12 +29,12 @@ public class PostDAO implements AutoCloseable {
     // INSERT
     public int insert(Post p) {
         final String sql =
-                "INSERT INTO post(title, content, category, author) VALUES (?, ?, ?, ?)";
+                "INSERT INTO post(title, content, board_id, author) VALUES (?, ?, ?, ?)";
 
         try (PreparedStatement ps = getConn().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, p.getTitle());
             ps.setString(2, p.getContent());
-            ps.setString(3, p.getCategory());
+            ps.setInt(3, p.getBoardId());
             ps.setString(4, p.getAuthor());
 
             int n = ps.executeUpdate();
@@ -51,40 +51,48 @@ public class PostDAO implements AutoCloseable {
         return -1;
     }
 
-    // 목록 조회
-    public List<Post> list(String category) {
+    // -------------------------------------------------------------------------
+    // 📌 board_id 기반 목록 조회 (전체 게시판 자동 인식)
+    // -------------------------------------------------------------------------
+    public List<Post> listByBoardId(int boardId) {
 
-        String base = "SELECT * FROM post";
-        String order =
-                " ORDER BY " +
-                        " CASE WHEN likes >= 5 AND dislikes <= 3 THEN 1 ELSE 0 END DESC, " +
-                        " (likes - dislikes) DESC, " +
-                        " id DESC";
+        int ALL_BOARD_ID = -1;
+
+        try (BoardDAO bdao = new BoardDAO()) {
+            ALL_BOARD_ID = bdao.getAllBoardId(); // 전체 게시판 자동 탐지
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         String sql;
-        boolean bindCategory = false;
 
-        if ("동네질문".equals(category)) {
-            sql = base + " WHERE category=?" + order;
-            bindCategory = true;
-        } else if ("인기글".equals(category)) {
-            sql = base + " WHERE likes >= 5 AND dislikes <= 3" + order;
+        if (boardId == ALL_BOARD_ID) {
+            sql =
+                "SELECT * FROM post " +
+                "ORDER BY " +
+                " CASE WHEN likes >= 5 AND dislikes <= 3 THEN 1 ELSE 0 END DESC, " +
+                " (likes - dislikes) DESC, " +
+                " id DESC";
         } else {
-            sql = base + order;
+            sql =
+                "SELECT * FROM post " +
+                "WHERE board_id=? " +
+                "ORDER BY " +
+                " CASE WHEN likes >= 5 AND dislikes <= 3 THEN 1 ELSE 0 END DESC, " +
+                " (likes - dislikes) DESC, " +
+                " id DESC";
         }
 
         List<Post> list = new ArrayList<>();
 
         try (PreparedStatement ps = getConn().prepareStatement(sql)) {
 
-            if (bindCategory) {
-                ps.setString(1, category);
+            if (boardId != ALL_BOARD_ID) {
+                ps.setInt(1, boardId);
             }
 
             try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(map(rs));
-                }
+                while (rs.next()) list.add(map(rs));
             }
 
         } catch (Exception e) {
@@ -117,13 +125,13 @@ public class PostDAO implements AutoCloseable {
     // UPDATE
     public int update(Post p) {
         final String sql =
-                "UPDATE post SET title=?, content=?, category=?, updated_at=NOW() WHERE id=?";
+                "UPDATE post SET title=?, content=?, board_id=?, updated_at=NOW() WHERE id=?";
 
         try (PreparedStatement ps = getConn().prepareStatement(sql)) {
 
             ps.setString(1, p.getTitle());
             ps.setString(2, p.getContent());
-            ps.setString(3, p.getCategory());
+            ps.setInt(3, p.getBoardId());
             ps.setInt(4, p.getId());
 
             return ps.executeUpdate();
@@ -141,11 +149,8 @@ public class PostDAO implements AutoCloseable {
         final String sql = "DELETE FROM post WHERE id=?";
 
         try (PreparedStatement ps = getConn().prepareStatement(sql)) {
-
             ps.setInt(1, id);
-
             return ps.executeUpdate();
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -178,7 +183,7 @@ public class PostDAO implements AutoCloseable {
     }
 
     // -------------------------------------------------------------------------
-    // 좋아요/싫어요 토글
+    // 👍 좋아요/👎 싫어요 토글 — 예전 버전 완전 복원 + 인기글 이동
     // -------------------------------------------------------------------------
     public Post votePost(int postId, int userId, String voteType) {
         if (!"like".equals(voteType) && !"dislike".equals(voteType)) {
@@ -191,7 +196,7 @@ public class PostDAO implements AutoCloseable {
 
             String currentVote = null;
 
-            // 1) 기존 투표 확인 (잠금)
+            // 기존 투표 확인
             final String selectSql =
                     "SELECT vote_type FROM post_vote_log WHERE post_id=? AND user_id=? FOR UPDATE";
 
@@ -203,10 +208,11 @@ public class PostDAO implements AutoCloseable {
                 }
             }
 
-            // 2) 토글 처리
+            // 신규 투표
             if (currentVote == null) {
                 final String insertSql =
                         "INSERT INTO post_vote_log(post_id, user_id, vote_type) VALUES(?,?,?)";
+
                 try (PreparedStatement ps = c.prepareStatement(insertSql)) {
                     ps.setInt(1, postId);
                     ps.setInt(2, userId);
@@ -214,18 +220,22 @@ public class PostDAO implements AutoCloseable {
                     ps.executeUpdate();
                 }
             }
+            // 같은 투표 → 취소
             else if (currentVote.equals(voteType)) {
                 final String deleteSql =
                         "DELETE FROM post_vote_log WHERE post_id=? AND user_id=?";
+
                 try (PreparedStatement ps = c.prepareStatement(deleteSql)) {
                     ps.setInt(1, postId);
                     ps.setInt(2, userId);
                     ps.executeUpdate();
                 }
             }
+            // 다른 투표 → 변경
             else {
                 final String updateSql =
                         "UPDATE post_vote_log SET vote_type=? WHERE post_id=? AND user_id=?";
+
                 try (PreparedStatement ps = c.prepareStatement(updateSql)) {
                     ps.setString(1, voteType);
                     ps.setInt(2, postId);
@@ -234,13 +244,13 @@ public class PostDAO implements AutoCloseable {
                 }
             }
 
-            // 3) 집계
+            // 집계
             int likes = 0;
             int dislikes = 0;
 
             final String aggSql =
                     "SELECT SUM(vote_type='like') AS likes, SUM(vote_type='dislike') AS dislikes " +
-                            "FROM post_vote_log WHERE post_id=?";
+                    "FROM post_vote_log WHERE post_id=?";
 
             try (PreparedStatement ps = c.prepareStatement(aggSql)) {
                 ps.setInt(1, postId);
@@ -252,15 +262,36 @@ public class PostDAO implements AutoCloseable {
                 }
             }
 
-            // 4) post 테이블 갱신
-            final String updateCountSql =
+            // post 테이블 반영
+            final String updatePost =
                     "UPDATE post SET likes=?, dislikes=? WHERE id=?";
-            try (PreparedStatement ps = c.prepareStatement(updateCountSql)) {
+
+            try (PreparedStatement ps = c.prepareStatement(updatePost)) {
                 ps.setInt(1, likes);
                 ps.setInt(2, dislikes);
                 ps.setInt(3, postId);
                 ps.executeUpdate();
             }
+
+            // -----------------------------------------------------------------
+            // ⭐ 좋아요가 5 이상이면 '인기글' 게시판으로 이동
+            // -----------------------------------------------------------------
+            try (BoardDAO bdao = new BoardDAO()) {
+                int hotBoardId = bdao.getHotBoardId(); // 인기글 board_id 자동 탐지
+
+                if (likes >= 5) {
+                    String moveSql = "UPDATE post SET board_id=? WHERE id=?";
+                    try (PreparedStatement ps = c.prepareStatement(moveSql)) {
+                        ps.setInt(1, hotBoardId);
+                        ps.setInt(2, postId);
+                        ps.executeUpdate();
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            // -----------------------------------------------------------------
 
             c.commit();
             c.setAutoCommit(true);
@@ -282,7 +313,7 @@ public class PostDAO implements AutoCloseable {
     }
 
     // -------------------------------------------------------------------------
-    // 🚨 신고 기능
+    // 🚨 신고 기능 — 예전 버전 복원
     // -------------------------------------------------------------------------
     public boolean addReport(int postId, int userId) {
 
@@ -290,7 +321,7 @@ public class PostDAO implements AutoCloseable {
             Connection c = getConn();
             c.setAutoCommit(false);
 
-            // 1) 기존 신고 여부 확인
+            // 중복 신고 확인
             String checkSql =
                     "SELECT 1 FROM post_report_log WHERE post_id=? AND user_id=? FOR UPDATE";
 
@@ -300,7 +331,7 @@ public class PostDAO implements AutoCloseable {
                 ps.setInt(1, postId);
                 ps.setInt(2, userId);
                 try (ResultSet rs = ps.executeQuery()) {
-                    exists = rs.next(); // 이미 신고됨
+                    exists = rs.next();
                 }
             }
 
@@ -309,9 +340,9 @@ public class PostDAO implements AutoCloseable {
                 return false;
             }
 
-            // 2) 신고 기록 추가
+            // 신고 추가
             String insertSql =
-                    "INSERT INTO post_report_log(post_id, user_id) VALUES (?,?)";
+                    "INSERT INTO post_report_log(post_id, userId) VALUES (?,?)";
 
             try (PreparedStatement ps = c.prepareStatement(insertSql)) {
                 ps.setInt(1, postId);
@@ -319,8 +350,9 @@ public class PostDAO implements AutoCloseable {
                 ps.executeUpdate();
             }
 
-            // 3) 신고수 계산
+            // 신고 갯수 계산
             int reports = 0;
+
             String countSql =
                     "SELECT COUNT(*) AS cnt FROM post_report_log WHERE post_id=?";
 
@@ -331,7 +363,7 @@ public class PostDAO implements AutoCloseable {
                 }
             }
 
-            // 4) post 테이블 반영
+            // post 테이블 업데이트
             String updatePost =
                     "UPDATE post SET reports=? WHERE id=?";
 
@@ -354,63 +386,6 @@ public class PostDAO implements AutoCloseable {
 
         return false;
     }
- // -------------------------------------------------------------------------
- // 🚨 신고 기준 이상 게시글 목록 조회
- // -------------------------------------------------------------------------
- public List<Post> listByReportThreshold(int threshold) {
-
-     final String sql =
-             "SELECT * FROM post WHERE reports >= ? ORDER BY reports DESC, id DESC";
-
-     List<Post> list = new ArrayList<>();
-
-     try (PreparedStatement ps = getConn().prepareStatement(sql)) {
-
-         ps.setInt(1, threshold);
-
-         try (ResultSet rs = ps.executeQuery()) {
-             while (rs.next()) {
-                 list.add(map(rs));
-             }
-         }
-
-     } catch (Exception e) {
-         e.printStackTrace();
-     }
-
-     return list;
- }
-
-
-    // -------------------------------------------------------------------------
-    // 🚨 신고 기준 이상 게시글 목록 가져오기 (관리자 페이지용)
-    // -------------------------------------------------------------------------
-    public List<Post> listByReportThreshold(int threshold) {
-
-        String sql =
-            "SELECT * FROM post " +
-            "WHERE reports >= ? " +
-            "ORDER BY reports DESC, created_at DESC";
-
-        List<Post> list = new ArrayList<>();
-
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
-
-            ps.setInt(1, threshold);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(map(rs));
-                }
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return list;
-    }
-
 
     // -------------------------------------------------------------------------
     // DTO 변환
@@ -422,20 +397,17 @@ public class PostDAO implements AutoCloseable {
         p.setId(rs.getInt("id"));
         p.setTitle(rs.getString("title"));
         p.setContent(rs.getString("content"));
-        p.setCategory(rs.getString("category"));
         p.setAuthor(rs.getString("author"));
+        p.setBoardId(rs.getInt("board_id"));
         p.setCreatedAt(rs.getTimestamp("created_at"));
         p.setUpdatedAt(rs.getTimestamp("updated_at"));
 
-        // 👍 좋아요
         int likes = rs.getInt("likes");
         p.setLikes(rs.wasNull() ? 0 : likes);
 
-        // 👎 싫어요
         int dislikes = rs.getInt("dislikes");
         p.setDislikes(rs.wasNull() ? 0 : dislikes);
 
-        // 🚨 신고수  (🔥 문제 해결 포인트)
         int reports = rs.getInt("reports");
         p.setReports(rs.wasNull() ? 0 : reports);
 
@@ -449,4 +421,3 @@ public class PostDAO implements AutoCloseable {
         } catch (SQLException ignore) {}
     }
 }
-

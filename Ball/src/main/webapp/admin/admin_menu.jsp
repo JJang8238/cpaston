@@ -81,7 +81,8 @@
         <a href="<%=ctx%>/admin/place-review">리뷰 관리</a>
 
         <a href="<%=ctx%>/admin/admin_menu.jsp?page=report">신고 처리</a>
-        <a href="<%=ctx%>/admin/admin_menu.jsp?page=stats">커뮤니티 관리</a>
+
+        <a href="<%=ctx%>/admin/admin_menu.jsp?page=board">커뮤니티 관리</a>
 
         <hr>
         <a href="<%=ctx%>/admin/admin_main.jsp">사용자 홈</a>
@@ -111,6 +112,11 @@
         <% } else if ("report".equals(pageParam)) { %>
 
             <jsp:include page="pages/report_manage.jsp" />
+		
+		<% } else if ("board".equals(pageParam)) { %>
+
+            <jsp:include page="pages/board_manage.jsp" />
+	
 
         <% } else { %>
 

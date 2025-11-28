@@ -31,15 +31,20 @@ public class UpdatePostServlet extends HttpServlet {
         int id = Integer.parseInt(req.getParameter("id"));
         String title = req.getParameter("title");
         String content = req.getParameter("content");
-        String category = req.getParameter("category");
 
-        // 🔥 어디서 왔는지 확인 (community / mypage)
+        // 🔥 board_id 사용
+        int boardId = 1;
+        try {
+            boardId = Integer.parseInt(req.getParameter("board_id"));
+        } catch (Exception ignore) {}
+
+        // 어디서 왔는지 체크(community / mypage)
         String from = req.getParameter("from");
-        if (from == null) from = "community"; // 기본값
+        if (from == null) from = "community";
 
         try (PostDAO dao = new PostDAO()) {
 
-            // 기존 게시글 가져오기
+            // 기존 게시글 조회
             Post post = dao.findById(id);
             if (post == null) {
                 resp.setContentType("text/html; charset=UTF-8");
@@ -47,17 +52,17 @@ public class UpdatePostServlet extends HttpServlet {
                 return;
             }
 
-            // 작성자 검증
+            // 작성자 체크
             if (!loginUsername.equals(post.getAuthor())) {
                 resp.setContentType("text/html; charset=UTF-8");
                 resp.getWriter().println("<script>alert('본인이 작성한 글만 수정할 수 있습니다.'); history.back();</script>");
                 return;
             }
 
-            // 새 값으로 객체 갱신
+            // 값 갱신
             post.setTitle(title);
             post.setContent(content);
-            post.setCategory(category);
+            post.setBoardId(boardId); // ★ board_id 반영
 
             // 업데이트 실행
             int result = dao.update(post);
@@ -66,12 +71,9 @@ public class UpdatePostServlet extends HttpServlet {
 
                 // 🔥 수정 성공 후 이동 처리
                 if ("mypage".equals(from)) {
-                    // 마이페이지에서 수정한 경우
                     resp.sendRedirect("mypage.jsp");
                 } else {
-                    // 기본은 커뮤니티
-                    resp.sendRedirect("community.jsp?category=" 
-                                      + java.net.URLEncoder.encode(category, "UTF-8"));
+                    resp.sendRedirect("community.jsp?board_id=" + boardId);
                 }
 
             } else {

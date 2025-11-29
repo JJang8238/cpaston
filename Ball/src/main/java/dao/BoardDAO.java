@@ -16,7 +16,7 @@ public class BoardDAO implements AutoCloseable {
             String url = "jdbc:mysql://localhost:3306/grade_db?serverTimezone=UTC";
             System.out.println("📌 BoardDAO: DB 연결 시도 → " + url);
 
-            conn = DriverManager.getConnection(url, "root", "8238");
+            conn = DriverManager.getConnection(url, "root", "1234");
 
             System.out.println("✅ BoardDAO: DB 연결 성공");
             
@@ -37,7 +37,7 @@ public class BoardDAO implements AutoCloseable {
         if (conn == null || conn.isClosed()) {
             String url = "jdbc:mysql://localhost:3306/grade_db?serverTimezone=UTC";
             System.out.println("📌 BoardDAO: 연결 재시도 → " + url);
-            conn = DriverManager.getConnection(url, "root", "8238");
+            conn = DriverManager.getConnection(url, "root", "1234");
         }
         return conn;
     }

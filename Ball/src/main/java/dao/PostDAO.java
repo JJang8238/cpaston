@@ -228,6 +228,7 @@ public class PostDAO implements AutoCloseable {
         final String sql = "DELETE FROM post WHERE id=?";
 
         try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+
             ps.setInt(1, id);
             return ps.executeUpdate();
 
@@ -250,7 +251,7 @@ public class PostDAO implements AutoCloseable {
             String currentVote = null;
 
             final String selectSql =
-                "SELECT vote_type FROM post_vote_log WHERE post_id=? AND user_id=? FOR_UPDATE";
+                "SELECT vote_type FROM post_vote_log WHERE post_id=? AND user_id=? FOR UPDATE";
 
             try (PreparedStatement ps = c.prepareStatement(selectSql)) {
                 ps.setInt(1, postId);
@@ -338,15 +339,17 @@ public class PostDAO implements AutoCloseable {
     ============================================================= */
     public boolean addReport(int postId, int userId) {
 
+        String checkSql = "SELECT 1 FROM post_report_log WHERE post_id=? AND user_id=?";
+        String insertSql = "INSERT INTO post_report_log(post_id, user_id) VALUES (?, ?)";
+        String countSql  = "SELECT COUNT(*) AS cnt FROM post_report_log WHERE post_id=?";
+        String updateSql = "UPDATE post SET reports=? WHERE id=?";
+
         try {
             Connection c = getConn();
             c.setAutoCommit(false);
 
-            String checkSql =
-                "SELECT 1 FROM post_report_log WHERE post_id=? AND user_id=? FOR_UPDATE";
-
+            // 1) 중복 신고 체크
             boolean exists = false;
-
             try (PreparedStatement ps = c.prepareStatement(checkSql)) {
                 ps.setInt(1, postId);
                 ps.setInt(2, userId);
@@ -357,30 +360,27 @@ public class PostDAO implements AutoCloseable {
 
             if (exists) {
                 c.setAutoCommit(true);
-                return false;
+                return false; // ← 진짜 중복 신고일 때만 false
             }
 
-            String insertSql =
-                "INSERT INTO post_report_log(post_id, user_id) VALUES (?,?)";
-
+            // 2) 신고 로그 insert
             try (PreparedStatement ps = c.prepareStatement(insertSql)) {
                 ps.setInt(1, postId);
                 ps.setInt(2, userId);
                 ps.executeUpdate();
             }
 
+            // 3) 신고 카운트 조회
             int reports = 0;
-
-            try (PreparedStatement ps = c.prepareStatement(
-                "SELECT COUNT(*) AS cnt FROM post_report_log WHERE post_id=?")) {
+            try (PreparedStatement ps = c.prepareStatement(countSql)) {
                 ps.setInt(1, postId);
                 try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) reports = rs.getInt("cnt");
                 }
             }
 
-            try (PreparedStatement ps = c.prepareStatement(
-                "UPDATE post SET reports=? WHERE id=?")) {
+            // 4) post 테이블 업데이트
+            try (PreparedStatement ps = c.prepareStatement(updateSql)) {
                 ps.setInt(1, reports);
                 ps.setInt(2, postId);
                 ps.executeUpdate();
@@ -391,11 +391,10 @@ public class PostDAO implements AutoCloseable {
             return true;
 
         } catch (Exception e) {
-            try { conn.rollback(); } catch (Exception ignore) {}
             e.printStackTrace();
+            try { conn.rollback(); } catch (Exception ignore) {}
+            return false;
         }
-
-        return false;
     }
 
     /* =============================================================
@@ -434,6 +433,7 @@ public class PostDAO implements AutoCloseable {
         p.setTitle(rs.getString("title"));
         p.setContent(rs.getString("content"));
         p.setAuthor(rs.getString("author"));
+
         p.setBoardId(rs.getInt("board_id"));
         p.setCreatedAt(rs.getTimestamp("created_at"));
         p.setUpdatedAt(rs.getTimestamp("updated_at"));

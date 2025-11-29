@@ -11,47 +11,6 @@
 
     User loginUser = (User) session.getAttribute("loginUser");
 
-<<<<<<< HEAD
-    /* ---------------------------------------------------------
-       📌 1) DB 게시판 목록 가져오기
-    --------------------------------------------------------- */
-    List<Board> boards = new ArrayList<>();
-    try (BoardDAO bdao = new BoardDAO()) {
-        boards = bdao.getAllBoards();   // → DB board 테이블 전체 가져오기
-    }
-
-    /* ---------------------------------------------------------
-       📌 2) 현재 선택된 board_id
-    --------------------------------------------------------- */
-    int boardId = 1; // 기본 = 1번(전체)
-    try {
-        if (request.getParameter("board") != null)
-            boardId = Integer.parseInt(request.getParameter("board"));
-    } catch (Exception ignored) { boardId = 1; }
-
-    /* ---------------------------------------------------------
-       📌 3) 선택된 board의 이름
-    --------------------------------------------------------- */
-    String boardName = "전체";
-    for (Board b : boards) {
-        if (b.getId() == boardId) {
-            boardName = b.getName();
-            break;
-        }
-    }
-
-    /* ---------------------------------------------------------
-       📌 4) 선택된 게시판의 글 목록
-    --------------------------------------------------------- */
-    List<Post> posts;
-    try (PostDAO dao = new PostDAO()) {
-        posts = dao.listByBoardId(boardId);
-    }
-
-    /* ---------------------------------------------------------
-       📌 5) 최신 공지
-    --------------------------------------------------------- */
-=======
     String categoryParam = request.getParameter("category");
     int categoryId = 1;
 
@@ -80,7 +39,6 @@
         }
     }
 
->>>>>>> 5c12d6756afaaf384d7f0ed010191f472fcad936
     Notice notice = null;
     try (NoticeDAO ndao = new NoticeDAO()) {
         notice = ndao.getLatestNotice();
@@ -100,8 +58,8 @@ body { background:#f8f9fa; }
 .best-badge { background:#0d6efd !important; color:white !important; font-weight:bold; }
 .notice-card { background:#fff9d6; border-left:6px solid #ffc107; }
 </style>
-
 </head>
+
 <body class="d-flex flex-column min-vh-100">
 
 <jsp:include page="/nav.jsp" />
@@ -115,15 +73,6 @@ body { background:#f8f9fa; }
 
 <main class="container flex-grow-1 pb-5">
 
-<<<<<<< HEAD
-    <!-- 📌 공지 -->
-    <% if (notice != null) { %>
-    <div class="card notice-card shadow-sm mb-4">
-      <div class="card-body">
-        <h5 class="fw-bold mb-1">📢 공지사항</h5>
-        <p><%= notice.getTitle() %></p>
-      </div>
-=======
     <!-- 공지사항 -->
     <div class="mb-4">
       <% if (notice != null) { %>
@@ -136,34 +85,14 @@ body { background:#f8f9fa; }
       <% } else { %>
         <div class="alert alert-warning">📢 현재 등록된 공지사항이 없습니다.</div>
       <% } %>
->>>>>>> 5c12d6756afaaf384d7f0ed010191f472fcad936
     </div>
-    <% } %>
 
   <div class="row">
 
-<<<<<<< HEAD
-    <!-- 🔥 좌측: DB 기반 게시판 목록 -->
-=======
     <!-- 왼쪽 카테고리 -->
->>>>>>> 5c12d6756afaaf384d7f0ed010191f472fcad936
     <aside class="col-md-3 mb-5">
 
       <div class="list-group shadow-sm">
-<<<<<<< HEAD
-
-        <% for (Board b : boards) { %>
-          <a href="<%=ctx%>/community.jsp?board=<%=b.getId()%>"
-             class="list-group-item list-group-item-action <%= (b.getId()==boardId) ? "active" : "" %>">
-            <%= b.getName() %>
-          </a>
-        <% } %>
-
-      </div>
-
-      <div class="d-grid mt-3">
-        <a href="<%=ctx%>/write.jsp?board=<%=boardId%>" class="btn btn-primary">글쓰기</a>
-=======
         <a href="<%=ctx%>/community.jsp?category=1"
            class="list-group-item list-group-item-action <%= (categoryId==1?"active":"") %>">
            전체
@@ -181,27 +110,20 @@ body { background:#f8f9fa; }
 
       <div class="d-grid mt-3">
         <a href="<%=ctx%>/write.jsp?board_id=<%=categoryId%>" class="btn btn-primary">글쓰기</a>
->>>>>>> 5c12d6756afaaf384d7f0ed010191f472fcad936
       </div>
 
     </aside>
 
-
-    <!-- 🔥 게시글 -->
+    <!-- 게시글 목록 -->
     <section class="col-md-9 mb-5">
 
-<<<<<<< HEAD
-      <div class="d-flex align-items-center gap-2 mb-3">
-        <h4 class="fw-bold mb-0"><%= boardName %> 게시판</h4>
-=======
       <div class="d-flex align-items-center gap-2 mb-2">
         <h4 class="fw-bold mb-0"><%= categoryName %> 게시글</h4>
->>>>>>> 5c12d6756afaaf384d7f0ed010191f472fcad936
         <span class="badge bg-secondary">총 <%= posts.size() %>건</span>
       </div>
 
       <% if (posts.isEmpty()) { %>
-        <div class="alert alert-info">게시글이 없습니다.</div>
+        <div class="alert alert-info">해당 카테고리에 게시글이 없습니다.</div>
       <% } else { %>
 
       <div class="row row-cols-1 g-3">
@@ -240,10 +162,7 @@ body { background:#f8f9fa; }
 
               <p class="text-muted small mb-2"><%= p.getAuthor() %> · <%= dateStr %></p>
 
-              <!-- 👍👎🚨 버튼 -->
-              <div class="d-flex justify-content-between align-items-center">
-
-                <div class="d-flex gap-2">
+              <div class="d-flex align-items-center justify-content-between">
 
                 <!-- 좋아요/싫어요 -->
                 <div class="d-flex align-items-center gap-2">
@@ -254,7 +173,6 @@ body { background:#f8f9fa; }
                   <button class="btn btn-sm btn-outline-secondary btn-dislike" data-id="<%=p.getId()%>">
                     👎 <span class="dislike-count"><%=p.getDislikes()%></span>
                   </button>
-
                 </div>
 
                 <!-- 신고 -->
@@ -270,7 +188,7 @@ body { background:#f8f9fa; }
           </div>
         </div>
 
-        <% } %>
+      <% } %>
 
       </div>
       <% } %>
@@ -295,7 +213,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 body: "action=like&id=" + postId
             })
             .then(res => res.json())
-            .then(updateUI(container));
+            .then(data => updateUI(container)(data));   // ★ 수정됨
         });
     });
 
@@ -311,7 +229,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 body: "action=dislike&id=" + postId
             })
             .then(res => res.json())
-            .then(updateUI(container));
+            .then(data => updateUI(container)(data));   // ★ 수정됨
         });
     });
 

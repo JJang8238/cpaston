@@ -169,6 +169,9 @@ CREATE TABLE post_report_log (
         ON DELETE CASCADE
 );
 
+ALTER TABLE post_report_log MODIFY user_id INT NOT NULL; --post_report_log테이블 user_id int로 수정!!
+
+
 INSERT INTO user (username, password, name, email, email_verified, role, profile_image)
 VALUES (
     'test6',                                                   -- 아이디

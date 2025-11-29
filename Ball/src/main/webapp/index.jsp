@@ -1,7 +1,15 @@
 <%@ page contentType="text/html; charset=UTF-8" language="java" pageEncoding="UTF-8" session="true" %>
-<%@ page import="java.util.*, java.net.URLEncoder" %>
-<%@ page import="dao.MatchDAO, dto.Match" %>
-<%@ page import="dao.PostDAO, dto.Post" %>
+
+<%@ page import="java.util.List" %>
+<%@ page import="java.util.ArrayList" %>
+<%@ page import="java.net.URLEncoder" %>
+
+<%@ page import="dao.MatchDAO" %>
+<%@ page import="dto.Match" %>
+
+<%@ page import="dao.PostDAO" %>
+<%@ page import="dto.Post" %>
+
 
 <%
     request.setCharacterEncoding("UTF-8");

@@ -16,10 +16,8 @@ import java.util.List;
 @WebServlet("/reserve")
 public class ReservationController extends HttpServlet {
 
-    private final MatchDAO matchDAO = new MatchDAO();
-
     /* ============================================================
-       GET : 경기 불러오기 / 리뷰 가능 여부 확인
+       GET : 경기 불러오기 / 리뷰 작성 가능 여부 확인
        ============================================================ */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -37,60 +35,64 @@ public class ReservationController extends HttpServlet {
 
         int userId = (user != null) ? user.getId() : -1;
 
-        /* -----------------------------------------------------------
-            1) 장소 기준 일정 조회
-        ----------------------------------------------------------- */
-        if ("matchesByPlace".equals(action) && place != null) {
+        /* 🔥 MatchDAO는 반드시 요청마다 새로 생성 */
+        try (MatchDAO matchDAO = new MatchDAO()) {
 
-            List<Match> matches = matchDAO.getMatchesByPlace(place, date);
-            JsonArray arr = new JsonArray();
+            /* -----------------------------------------------------------
+                1) 장소 기준 일정 조회
+            ----------------------------------------------------------- */
+            if ("matchesByPlace".equals(action) && place != null) {
 
-            for (Match m : matches) {
-                JsonObject obj = new JsonObject();
+                List<Match> matches = matchDAO.getMatchesByPlace(place, date);
+                JsonArray arr = new JsonArray();
 
-                obj.addProperty("id", m.getId());
-                obj.addProperty("time", m.getMatchTime() != null ? m.getMatchTime().toString() : "");
-                obj.addProperty("current", m.getCurrentPlayers());
-                obj.addProperty("max", m.getMaxPlayers());
-                obj.addProperty("canceled", "취소됨".equals(m.getMatchStatus()));
-                obj.addProperty("joined", userId != -1 && matchDAO.isUserReserved(userId, m.getId()));
+                for (Match m : matches) {
+                    JsonObject obj = new JsonObject();
 
-                arr.add(obj);
+                    obj.addProperty("id", m.getId());
+                    obj.addProperty("time", (m.getMatchTime() != null) ? m.getMatchTime().toString() : "");
+                    obj.addProperty("current", m.getCurrentPlayers());
+                    obj.addProperty("max", m.getMaxPlayers());
+                    obj.addProperty("canceled", "취소됨".equals(m.getMatchStatus()));
+                    obj.addProperty("joined", userId != -1 && matchDAO.isUserReserved(userId, m.getId()));
+
+                    arr.add(obj);
+                }
+
+                response.getWriter().write(arr.toString());
+                return;
             }
 
-            response.getWriter().write(arr.toString());
-            return;
-        }
+            /* -----------------------------------------------------------
+                2) 리뷰 작성 가능 여부
+            ----------------------------------------------------------- */
+            else if ("canReview".equals(action) && place != null) {
 
-        /* -----------------------------------------------------------
-            2) 리뷰 작성 가능 여부
-        ----------------------------------------------------------- */
-        else if ("canReview".equals(action) && place != null) {
+                JsonObject result = new JsonObject();
 
-            JsonObject result = new JsonObject();
+                if (userId == -1) {
+                    result.addProperty("can", false);
+                    response.getWriter().write(result.toString());
+                    return;
+                }
 
-            if (userId == -1) {
-                result.addProperty("can", false);
+                List<Match> matches = matchDAO.getMatchesByPlace(place, date);
+                boolean can = false;
+
+                for (Match m : matches) {
+                    if (matchDAO.isUserReserved(userId, m.getId())) {
+                        can = true;
+                        break;
+                    }
+                }
+
+                result.addProperty("can", can);
                 response.getWriter().write(result.toString());
                 return;
             }
 
-            List<Match> matches = matchDAO.getMatchesByPlace(place, date);
-
-            boolean can = false;
-            for (Match m : matches) {
-                if (matchDAO.isUserReserved(userId, m.getId())) {
-                    can = true;
-                    break;
-                }
-            }
-
-            result.addProperty("can", can);
-            response.getWriter().write(result.toString());
-            return;
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         }
-
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
     }
 
 
@@ -117,10 +119,13 @@ public class ReservationController extends HttpServlet {
         int userId = user.getId();
         int matchId = Integer.parseInt(request.getParameter("matchId"));
 
-        // 🔥 AJAX 여부 판단
         boolean isAjax = "XMLHttpRequest".equals(request.getHeader("X-Requested-With"));
 
-        try (PrintWriter out = response.getWriter()) {
+        /* 🔥 여기에서도 MatchDAO는 매 요청마다 새 객체 */
+        try (MatchDAO matchDAO = new MatchDAO();
+             PrintWriter out = response.getWriter()) {
+
+            response.setContentType("application/json; charset=UTF-8");
 
             /* ---------------------------------------------------------
                 1) 예약하기
@@ -128,8 +133,6 @@ public class ReservationController extends HttpServlet {
             if ("book".equals(action)) {
 
                 boolean ok = matchDAO.bookMatch(userId, matchId);
-
-                response.setContentType("application/json; charset=UTF-8");
                 out.write("{\"ok\":" + ok + "}");
                 return;
             }
@@ -141,21 +144,14 @@ public class ReservationController extends HttpServlet {
 
                 boolean ok = matchDAO.cancelReservation(userId, matchId);
 
-                /* -------------------------
-                   🔥 Form 요청 (마이페이지)
-                   → redirect
-                ------------------------- */
+                // form 제출 (마이페이지)
                 if (!isAjax) {
                     session.setAttribute("msg", ok ? "예약이 취소되었습니다." : "예약 취소 실패!");
                     response.sendRedirect("mypage.jsp");
                     return;
                 }
 
-                /* -------------------------
-                   🔥 AJAX 요청 (경기장 페이지)
-                   → JSON 반환
-                ------------------------- */
-                response.setContentType("application/json; charset=UTF-8");
+                // AJAX
                 out.write("{\"ok\":" + ok + "}");
                 return;
             }
@@ -164,7 +160,6 @@ public class ReservationController extends HttpServlet {
                 3) 잘못된 action
             --------------------------------------------------------- */
             else {
-                response.setContentType("application/json; charset=UTF-8");
                 out.write("{\"ok\":false,\"msg\":\"올바르지 않은 요청입니다.\"}");
             }
 

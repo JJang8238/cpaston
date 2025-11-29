@@ -1,10 +1,12 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.util.*" %>
-<%@ page import="dao.PostDAO, dto.Post" %>
-<%@ page import="dao.NoticeDAO, dto.Notice" %>
-<%@ page import="dao.BoardDAO, dto.Board" %>
+<%@ page import="dao.PostDAO" %>
+<%@ page import="dao.NoticeDAO" %>
+<%@ page import="dao.BoardDAO" %>
 <%@ page import="dto.User" %>
-
+<%@ page import="dto.Post" %>
+<%@ page import="dto.Notice" %>
+<%@ page import="dto.Board" %>
 <%
     request.setCharacterEncoding("UTF-8");
     String ctx = request.getContextPath();

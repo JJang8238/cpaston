@@ -4,7 +4,6 @@ import dto.Match;
 import util.DBConnection;
 
 import java.sql.*;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -130,7 +129,7 @@ public class MatchDAO implements AutoCloseable {
     }
 
     /* ===========================================================
-        ⭐ 예약하기
+        ⭐ 예약하기 (🔥 수정 완료: match_status.trim() 적용)
        =========================================================== */
     public boolean bookMatch(int userId, int matchId) {
 
@@ -142,7 +141,7 @@ public class MatchDAO implements AutoCloseable {
         try (Connection conn = DBConnection.getConnection()) {
             conn.setAutoCommit(false);
 
-            // 중복 체크
+            // 1) 중복 체크
             try (PreparedStatement ps = conn.prepareStatement(checkSql)) {
                 ps.setInt(1, userId);
                 ps.setInt(2, matchId);
@@ -155,6 +154,7 @@ public class MatchDAO implements AutoCloseable {
             int current = 0, max = 0;
             String status = null;
 
+            // 2) 경기 정보 조회
             try (PreparedStatement ps = conn.prepareStatement(getSql)) {
                 ps.setInt(1, matchId);
 
@@ -166,18 +166,26 @@ public class MatchDAO implements AutoCloseable {
                     }
                 }
 
-                if (!"예약중".equals(status)) return false;
-                if (current >= max) return false;
+                // 🔥 여기서 trim() 안 하면 절대 예약 성공 안 됨
+                if (status == null || !"예약중".equals(status.trim())) {
+                    conn.rollback();
+                    return false;
+                }
+
+                if (current >= max) {
+                    conn.rollback();
+                    return false;
+                }
             }
 
-            // 예약 저장
+            // 3) 예약 저장
             try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
                 ps.setInt(1, userId);
                 ps.setInt(2, matchId);
                 ps.executeUpdate();
             }
 
-            // 인원 증가
+            // 4) 인원 증가
             try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
                 ps.setInt(1, matchId);
                 ps.executeUpdate();
@@ -205,6 +213,7 @@ public class MatchDAO implements AutoCloseable {
 
             int deleted;
 
+            // 예약 삭제
             try (PreparedStatement ps = conn.prepareStatement(delSql)) {
                 ps.setInt(1, userId);
                 ps.setInt(2, matchId);
@@ -216,6 +225,7 @@ public class MatchDAO implements AutoCloseable {
                 return false;
             }
 
+            // 인원 감소
             try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
                 ps.setInt(1, matchId);
                 ps.executeUpdate();
@@ -258,9 +268,7 @@ public class MatchDAO implements AutoCloseable {
             ps.setInt(1, id);
 
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return toMatch(rs);
-                }
+                if (rs.next()) return toMatch(rs);
             }
 
         } catch (Exception e) { e.printStackTrace(); }
@@ -313,7 +321,6 @@ public class MatchDAO implements AutoCloseable {
             ps.setInt(5, m.getId());
 
             ps.executeUpdate();
-
             return true;
 
         } catch (Exception e) { e.printStackTrace(); }
@@ -336,7 +343,7 @@ public class MatchDAO implements AutoCloseable {
     }
 
     /* ===========================================================
-        ⭐ getPlaceByMatchId
+        ⭐ 특정 경기 → 장소명 가져오기
        =========================================================== */
     public String getPlaceByMatchId(int matchId) {
         String sql = "SELECT location FROM match_reservations WHERE id=?";
@@ -354,7 +361,7 @@ public class MatchDAO implements AutoCloseable {
     }
 
     /* ===========================================================
-        ⭐ 내가 예약한 경기 목록 조회 (✨ 신규 추가)
+        ⭐ 내가 예약한 경기 목록
        =========================================================== */
     public List<Match> getMyReservedMatches(int userId) {
 
@@ -373,9 +380,7 @@ public class MatchDAO implements AutoCloseable {
             ps.setInt(1, userId);
 
             try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(toMatch(rs));
-                }
+                while (rs.next()) list.add(toMatch(rs));
             }
 
         } catch (Exception e) {

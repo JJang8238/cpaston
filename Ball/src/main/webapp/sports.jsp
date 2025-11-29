@@ -436,41 +436,59 @@ function loadMatches(placeName) {
 
 function reserveMatch(matchId) {
     const params = new URLSearchParams();
-    params.append("action","book");
-    params.append("matchId",matchId);
+    params.append("action", "book");
+    params.append("matchId", matchId);
 
     fetch("<%=request.getContextPath()%>/reserve", {
-        method:"POST",
-        body:params
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "X-Requested-With": "XMLHttpRequest"
+        },
+        body: params,
+        credentials: "include"   // ★ 쿠키(JSESSIONID) 포함
     })
-    .then(res=>res.json())
-    .then(data=>{
-        if(data.ok){
+    .then(res => res.json())
+    .then(data => {
+        if (data.ok) {
             alert("예약 완료!");
             loadMatches(currentPlaceName);
         } else {
             alert("예약 실패");
         }
+    })
+    .catch(err => {
+        console.error("예약 오류:", err);
+        alert("서버 오류가 발생했습니다.");
     });
 }
 
 function cancelReserve(matchId) {
     const params = new URLSearchParams();
-    params.append("action","cancel");
-    params.append("matchId",matchId);
+    params.append("action", "cancel");
+    params.append("matchId", matchId);
 
     fetch("<%=request.getContextPath()%>/reserve", {
-        method:"POST",
-        body:params
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "X-Requested-With": "XMLHttpRequest"
+        },
+        body: params,
+        credentials: "include"   // ★ 쿠키(JSESSIONID) 포함
     })
-    .then(res=>res.json())
-    .then(data=>{
-        if(data.ok){
+    .then(res => res.json())
+    .then(data => {
+        if (data.ok) {
             alert("예약 취소!");
             loadMatches(currentPlaceName);
         } else {
             alert("취소 실패");
         }
+    })
+    .catch(err => {
+        console.error("취소 오류:", err);
+        alert("서버 오류가 발생했습니다.");
     });
 }
 

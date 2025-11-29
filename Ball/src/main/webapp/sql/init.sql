@@ -192,3 +192,25 @@ VALUES
 ('2025-12-10', '18:00:00', '양주시유소년축구클럽', 1, 18, '예약중'),
 ('2025-12-10', '20:00:00', '양주시유소년축구클럽', 0, 18, '예약중'),
 ('2025-12-10', '22:00:00', '양주시유소년축구클럽', 2, 18, '예약중');
+
+DESC board;
+
+DESC post_vote_log;
+
+UPDATE match_reservations
+SET match_status='예약중'
+WHERE match_status IS NULL OR match_status='';
+
+SELECT id, match_status 
+FROM match_reservations 
+WHERE id = 72;
+
+SELECT * FROM reservations;
+
+SELECT * FROM user;
+
+SHOW CREATE TABLE reservations;
+
+SHOW CREATE TABLE reservations;
+
+DESC match_reservations;

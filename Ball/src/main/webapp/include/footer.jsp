@@ -2,7 +2,7 @@
 </main>
 <footer class="py-5 bg-dark mt-5">
   <div class="container px-4 px-lg-5">
-    <p class="m-0 text-center text-white">Copyright &copy; 플랩풋볼 2025</p>
+    <p class="m-0 text-center text-white">볼삐또에 오신걸 환영합니다.</p>
   </div>
 </footer>
 

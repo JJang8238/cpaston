@@ -54,10 +54,9 @@
         e.printStackTrace();
     }
 
-    // 🔸 결과 처리
+    // 🔸 결과 처리 (🔥 여기 수정!)
     if (newId > 0) {
-        // 성공 → 해당 게시판으로 이동
-    	response.sendRedirect(ctx + "/community.jsp?board_id=" + boardId);
+        response.sendRedirect(ctx + "/community.jsp?category=" + boardId);
     } else {
         out.println("<script>alert('저장 실패'); history.back();</script>");
     }

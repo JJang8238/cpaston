@@ -1,7 +1,8 @@
 USE grade_db;
-SELECT DATABASE();   -- grade_db 인지 확인
 
-/* 1) 사용자(user) + 이메일 인증 테이블 */
+/* ============================================================
+ 1) 사용자(user) + 이메일 인증(email_verification)
+============================================================ */
 CREATE TABLE `user` (
   id             INT AUTO_INCREMENT PRIMARY KEY,
   username       VARCHAR(50)  NOT NULL UNIQUE,
@@ -10,7 +11,7 @@ CREATE TABLE `user` (
   role           VARCHAR(20)  NOT NULL DEFAULT 'student',
   email          VARCHAR(255) UNIQUE,
   email_verified TINYINT(1)   NOT NULL DEFAULT 0,
-  profile_image VARCHAR(255) NULL
+  profile_image  VARCHAR(255)
 );
 
 CREATE TABLE email_verification (
@@ -20,190 +21,77 @@ CREATE TABLE email_verification (
   attempts    INT          NOT NULL DEFAULT 0
 );
 
-/* 2) 경기(match_reservations) */
+/* ============================================================
+ 2) 경기(match_reservations)
+============================================================ */
 CREATE TABLE match_reservations (
   id               INT AUTO_INCREMENT PRIMARY KEY,
-  match_time       TIME         NOT NULL,
-  match_date       DATE         NOT NULL,
+  match_time       TIME NOT NULL,
+  match_date       DATE NOT NULL,
   location         VARCHAR(100) NOT NULL,
-  current_players  INT          NOT NULL DEFAULT 0,
-  max_players      INT          NOT NULL DEFAULT 18,
-  lat              DOUBLE       NULL,
-  lng              DOUBLE       NULL,
+  current_players  INT NOT NULL DEFAULT 0,
+  max_players      INT NOT NULL DEFAULT 18,
+  lat              DOUBLE,
+  lng              DOUBLE,
+  match_status     VARCHAR(20) DEFAULT '예약중',
+
   UNIQUE KEY ux_match_unique (location, match_date, match_time)
 );
 
-/* 3) 예약(reservations) */
+/* ============================================================
+ 3) 예약(reservations)
+============================================================ */
 CREATE TABLE reservations (
   id                     INT AUTO_INCREMENT PRIMARY KEY,
   user_id                INT NOT NULL,
   match_reservation_id   INT NOT NULL,
   created_at             TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
   UNIQUE KEY uk_user_match (user_id, match_reservation_id),
-  CONSTRAINT fk_resv_user
-    FOREIGN KEY (user_id) REFERENCES `user`(id)
-    ON UPDATE CASCADE ON DELETE CASCADE,
-  CONSTRAINT fk_resv_match
-    FOREIGN KEY (match_reservation_id) REFERENCES match_reservations(id)
-    ON UPDATE CASCADE ON DELETE CASCADE
+
+  FOREIGN KEY (user_id) REFERENCES `user`(id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+
+  FOREIGN KEY (match_reservation_id) REFERENCES match_reservations(id)
+        ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-USE grade_db;
-
--- 예약 기반 리뷰: 내가 뛴 경기용
-CREATE TABLE IF NOT EXISTS match_reviews (
+/* ============================================================
+ 4) 경기 리뷰(match_reviews) — 내가 뛴 경기 후기
+============================================================ */
+CREATE TABLE match_reviews (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
   match_reservation_id INT NOT NULL,
-  rating TINYINT NULL,
+  rating TINYINT,
   content TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES `user`(id) ON DELETE CASCADE ON UPDATE CASCADE,
-  FOREIGN KEY (match_reservation_id) REFERENCES match_reservations(id) ON DELETE CASCADE ON UPDATE CASCADE,
-  INDEX ix_mrv_user (user_id),
-  INDEX ix_mrv_match (match_reservation_id)
+
+  FOREIGN KEY (user_id) REFERENCES `user`(id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+
+  FOREIGN KEY (match_reservation_id) REFERENCES match_reservations(id)
+        ON DELETE CASCADE ON UPDATE CASCADE
 );
 
--- 장소(마커) 기반 리뷰: 지도에서 “보기”에 사용 (쓰기 필요하면 나중에 추가)
-CREATE TABLE IF NOT EXISTS place_reviews (
+/* ============================================================
+ 5) 장소 리뷰(place_reviews) — 마커 기반 후기
+============================================================ */
+CREATE TABLE place_reviews (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
   place_name VARCHAR(100) NOT NULL,
-  rating TINYINT NULL,
+  rating TINYINT,
   content TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES `user`(id) ON DELETE CASCADE ON UPDATE CASCADE,
-  INDEX ix_prv_place (place_name),
-  INDEX ix_prv_user (user_id)
+
+  FOREIGN KEY (user_id) REFERENCES `user`(id)
+        ON DELETE CASCADE ON UPDATE CASCADE
 );
 
--- 데모용 --
-INSERT INTO match_reservations (match_date, match_time, location, current_players, max_players)
-VALUES (CURDATE(), '18:00:00', '증산체육공원', 4, 16);
-/*--------------------------------------------
---여기 업데이트함--
------------------------------------------------*/
-CREATE TABLE IF NOT EXISTS post (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  title VARCHAR(200) NOT NULL,
-  content MEDIUMTEXT NOT NULL,
-  author VARCHAR(100) NOT NULL,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
-
-  likes INT DEFAULT 0,
-  dislikes INT DEFAULT 0,
-  reports INT DEFAULT 0,
-
-  board_id INT NOT NULL DEFAULT 1,
-  FOREIGN KEY (board_id) REFERENCES board(id)
-    ON UPDATE CASCADE ON DELETE CASCADE
-
-);
-
-  SELECT id, username, name, email_verified
-FROM `user`
-WHERE email = 'jjang761213@naver.com';
-
--- 1) 기존 계정의 email 비우기(또는 다른 주소로 변경)
-UPDATE `user`
-SET email = NULL, email_verified = 0
-WHERE email = 'jjang761213@naver.com';
-
--- 2) 인증 테이블 정리(해당 이메일의 PK/고유 레코드 제거)
-DELETE FROM email_verification
-WHERE email = 'jjang761213@naver.com';
-
--- 3) 이제 새 계정에서 같은 이메일로 가입 → 인증 로직 정상 작동
-
--- 4) 데모용 경기
-ALTER TABLE match_reservations
-ADD COLUMN match_status VARCHAR(20) DEFAULT '예약중';
-
-
-SELECT * FROM match_reservations WHERE match_date = CURDATE();
-
-DESC match_reservations;
-
-commit;
-INSERT INTO match_reservations (match_date, match_time, location, current_players, max_players, match_status)
-VALUES 
-('2025-11-27', '10:00:00', '탄탄축구실내풋살장', 7, 18, '예약중'),
-('2025-11-27', '12:00:00', '탄탄축구실내풋살장', 6, 18, '예약중'),
-('2025-11-27', '14:00:00', '탄탄축구실내풋살장', 14, 18, '예약중'),
-('2025-11-27', '16:00:00', '탄탄축구실내풋살장', 0, 18, '예약중'),
-('2025-11-27', '18:00:00', '탄탄축구실내풋살장', 0, 18, '예약중'),
-('2025-11-27', '20:00:00', '탄탄축구실내풋살장', 7, 18, '예약중'),
-('2025-11-27', '22:00:00', '탄탄축구실내풋살장', 14, 18, '예약중');
-
-
-DELETE FROM match_reservations;
-
-SELECT * FROM match_reservations;
-SELECT * FROM reservations;
-
-SHOW TABLES;
-SELECT * FROM user;
-
-SELECT * FROM community_posts;
-
-CREATE TABLE community_posts (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    title VARCHAR(255),
-    writer VARCHAR(100),
-    content TEXT,
-    regdate VARCHAR(20)
-);
-
-DESC community_posts;
-
-INSERT INTO user (username, password, name, email, email_verified, role, profile_image)
-VALUES (
-    'test11',                                                   -- 아이디
-    SHA2('1234', 256),                                          -- 비밀번호(평문 X)
-    '김써미',                                                    -- 이름
-    'lejjsh1112@gmail.com',                                         -- 이메일
-    1,                                                          -- 이메일 인증됨(1) 처리
-    'student',                                                  -- 권한
-    'default-profile.png'                                       -- 기본 이미지
-);
-
-DESC matches;
-
-CREATE TABLE IF NOT EXISTS review (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    place_name VARCHAR(255) NOT NULL,
-    author VARCHAR(100) NOT NULL,
-    rating INT NOT NULL,
-    content TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-ALTER TABLE post ADD COLUMN likes INT DEFAULT 0;
-ALTER TABLE post ADD COLUMN dislikes INT DEFAULT 0;
-
-CREATE TABLE post_vote_log (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    post_id INT NOT NULL,
-    user_id INT NOT NULL,
-    vote_type ENUM('like','dislike') NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY uk_vote_unique (post_id, user_id),
-    FOREIGN KEY (post_id) REFERENCES post(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
-);
-
-ALTER TABLE post ADD COLUMN reports INT DEFAULT 0;
-
-CREATE TABLE post_report_log (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    post_id INT NOT NULL,
-    user_id VARCHAR(50) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY uk_report_unique (post_id, user_id),
-    FOREIGN KEY (post_id) REFERENCES post(id) ON DELETE CASCADE
-);
-
+/* ============================================================
+ 6) 공지사항(notice)
+============================================================ */
 CREATE TABLE notice (
   id INT AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(255) NOT NULL,
@@ -212,8 +100,7 @@ CREATE TABLE notice (
 );
 
 /* ============================================================
-4) 게시판 board — 신규 구조 유지
-   🔥 기존 category ENUM(전체/인기글/동네질문)을 대체함
+ 7) 게시판(board)
 ============================================================ */
 CREATE TABLE board (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -222,29 +109,19 @@ CREATE TABLE board (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- 기본 3개 게시판
 INSERT INTO board (name, sort_order) VALUES
 ('전체', 1),
 ('인기글', 2),
 ('동네질문', 3);
 
-
+SELECT * FROM board ORDER BY sort_order
 /* ============================================================
- 5) 게시글 post — 완전 통합판
-   🔥 category(ENUM) 제거
-   🔥 기존 board_id 삭제 후 재추가 문제 해결
+ 8) 게시글(post)
 ============================================================ */
 CREATE TABLE post (
   id INT AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(200) NOT NULL,
   content MEDIUMTEXT NOT NULL,
-
-  /*  
-   🔥🔥🔥 주석 설명:
-   기존에는 category ENUM('전체','인기글','동네질문') 으로 관리했음.
-   현재 프로젝트는 "board" 테이블 기반이므로 category는 삭제.
-  */
-
   author VARCHAR(100) NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
@@ -253,13 +130,62 @@ CREATE TABLE post (
   dislikes INT DEFAULT 0,
   reports INT DEFAULT 0,
 
-  /*  
-   🔥 최종 board_id (외래키)
-   - 더 이상 DROP/ADD 반복 없음
-   - project DAO(PostDAO)와 정확히 일치
-  */
   board_id INT NOT NULL DEFAULT 1,
   FOREIGN KEY (board_id) REFERENCES board(id)
         ON UPDATE CASCADE ON DELETE CASCADE
 );
 
+/* ============================================================
+ 9) 게시글 투표(post_vote_log)
+============================================================ */
+CREATE TABLE post_vote_log (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    post_id INT NOT NULL,
+    user_id INT NOT NULL,
+    vote_type ENUM('like','dislike') NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE KEY uk_vote_unique (post_id, user_id),
+
+    FOREIGN KEY (post_id) REFERENCES post(id)
+        ON DELETE CASCADE,
+
+    FOREIGN KEY (user_id) REFERENCES user(id)
+        ON DELETE CASCADE
+);
+
+/* ============================================================
+ 10) 게시글 신고(post_report_log)
+============================================================ */
+CREATE TABLE post_report_log (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    post_id INT NOT NULL,
+    user_id VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE KEY uk_report_unique (post_id, user_id),
+
+    FOREIGN KEY (post_id) REFERENCES post(id)
+        ON DELETE CASCADE
+);
+
+INSERT INTO user (username, password, name, email, email_verified, role, profile_image)
+VALUES (
+    'test6',                                                   -- 아이디
+    SHA2('1234', 256),                                          -- 비밀번호(평문 X)
+    '김요우',                                                    -- 이름
+    'lejㄴsh1012@gmail.com',                                         -- 이메일
+    1,                                                          -- 이메일 인증됨(1) 처리
+    'student',                                                  -- 권한
+    'default-profile.png'                                       -- 기본 이미지
+);
+
+INSERT INTO match_reservations (match_date, match_time, location, current_players, max_players, match_status)
+VALUES 
+('2025-12-10', '10:00:00', '양주시유소년축구클럽', 2, 18, '예약중'),
+('2025-12-10', '12:00:00', '양주시유소년축구클럽', 5, 18, '예약중'),
+('2025-12-10', '14:00:00', '양주시유소년축구클럽', 7, 18, '예약중'),
+('2025-12-10', '16:00:00', '양주시유소년축구클럽', 9, 18, '예약중'),
+('2025-12-10', '18:00:00', '양주시유소년축구클럽', 1, 18, '예약중'),
+('2025-12-10', '20:00:00', '양주시유소년축구클럽', 0, 18, '예약중'),
+('2025-12-10', '22:00:00', '양주시유소년축구클럽', 2, 18, '예약중');

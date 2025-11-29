@@ -31,6 +31,7 @@
     /* --------------------------- 내가 쓴 게시글 --------------------------- */
     List<Post> myPosts = new ArrayList<>();
     try (PostDAO dao = new PostDAO()) {
+        // ★ username이 null인 경우가 있으므로 이름으로 검색해야 오류가 안남
         myPosts = dao.listByAuthor(fUsername);
     } catch (Exception e) { e.printStackTrace(); }
 
@@ -43,7 +44,7 @@
 
     int totalReviewCount = myPlaceReviews.size() + myMatchReviews.size();
 
-    // 5개까지만 보여줄 리스트 (장소 / 경기)
+    // 5개까지만 보여줄 리스트
     List<Map<String,Object>> placeLimit = (myPlaceReviews.size() > 5)
         ? myPlaceReviews.subList(0, 5)
         : myPlaceReviews;
@@ -205,7 +206,6 @@
                     <% } %>
                     </ul>
 
-                    <%-- 5개를 넘어가면 나머지 리뷰도 숨겨둔 상태로 렌더링 (더보기 용) --%>
                     <% if (myPlaceReviews.size() > 5) { %>
                         <ul class="list-group mb-3 d-none" id="placeReviewHidden">
                         <% for (int i = 5; i < myPlaceReviews.size(); i++) {

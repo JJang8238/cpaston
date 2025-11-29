@@ -190,6 +190,61 @@ public class BoardDAO implements AutoCloseable {
         }
     }
 
+ // ----------------------------------------------------
+ // 📌 게시판 이름 수정
+ // ----------------------------------------------------
+ public void update(int id, String name) {
+
+     System.out.println("📌 BoardDAO.update(): id=" + id + ", name=" + name);
+
+     String sql = "UPDATE board SET name=? WHERE id=?";
+
+     try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+         ps.setString(1, name);
+         ps.setInt(2, id);
+
+         ps.executeUpdate();
+
+         System.out.println("✔ BoardDAO.update() 완료");
+
+     } catch (Exception e) {
+         System.out.println("❌ BoardDAO.update() 실패");
+         e.printStackTrace();
+     }
+ }
+
+//----------------------------------------------------
+//📌 게시판 삭제
+//----------------------------------------------------
+public void delete(int id) {
+
+  System.out.println("📌 BoardDAO.delete(): id = " + id);
+
+  // 🔒 "전체", "인기글" 같은 고정 게시판은 삭제 금지
+  if (isFixedBoard(id)) {
+      System.out.println("⚠ 고정 게시판 삭제 시도 → 예외 발생");
+      throw new IllegalStateException("고정 게시판은 삭제할 수 없습니다.");
+  }
+
+  String sql = "DELETE FROM board WHERE id=?";
+
+  try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+      ps.setInt(1, id);
+      int rows = ps.executeUpdate();
+
+      System.out.println("✔ BoardDAO.delete(): 삭제된 행 수 = " + rows);
+
+  } catch (Exception e) {
+      System.out.println("❌ BoardDAO.delete() 실패");
+      e.printStackTrace();
+
+      // 필요하면 여기서도 상황에 따라 IllegalStateException으로 감싸서 던질 수도 있음 (예: FK 제약 등)
+      // 하지만 이건 프로젝트 설계에 따라 달라져서, 지금은 단순히 로그만 남김.
+  }
+}
+
     // ----------------------------------------------------
     // 삭제 / 수정은 동일하게 로그 추가 가능
     // ----------------------------------------------------

@@ -89,7 +89,14 @@ body { background:#f8f9fa; }
       <% } %>
     </div>
 
-  <div class="row">
+    <!-- 🔹 관리자만 공지 작성 버튼 -->
+    <% if (loginUser != null && "admin".equals(loginUser.getRole())) { %>
+        <div class="mb-4 text-end">
+            <a href="<%=ctx%>/admin/admin_notice.jsp" class="btn btn-sm btn-warning">공지 작성</a>
+        </div>
+    <% } %>
+
+    <div class="row">
 
     <!-- 왼쪽 카테고리 -->
     <aside class="col-md-3 mb-5">

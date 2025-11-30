@@ -46,6 +46,22 @@ public class NoticeDAO implements AutoCloseable {
         return null; // 공지 없음
     }
 
+    // 🔹 공지 새로 등록하기
+    public boolean insertNotice(String title, String content) {
+        final String sql = "INSERT INTO notice (title, content, created_at) VALUES (?, ?, NOW())";
+
+        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+            ps.setString(1, title);
+            ps.setString(2, content);
+            int affected = ps.executeUpdate();
+            return affected == 1;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
     @Override
     public void close() {
         try { if (conn != null) conn.close(); } catch (Exception ignore) {}

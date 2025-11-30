@@ -40,7 +40,7 @@
         if (count > 0) avg /= count;
     }
 
-    // 전체 장소 목록
+    // 전체 장소 목록 (오늘 기준)
     Set<String> allPlaces = new HashSet<>();
     for (Match m : matchDAO.getTodayMatches()) {
         allPlaces.add(m.getLocation());
@@ -70,7 +70,7 @@
 
 <body>
 
-<!-- 상단 네비바 (community.jsp 디자인 동일) -->
+<!-- 네비바 -->
 <nav class="navbar navbar-expand-lg" style="background-color:#212529;">
     <div class="container px-4 px-lg-5 d-flex justify-content-between align-items-center">
         <a class="navbar-brand text-white fw-bold" href="<%=ctx%>/main.jsp">볼피또</a>
@@ -122,9 +122,11 @@
     <!-- 리뷰 리스트 -->
     <div class="mb-4">
         <% if (place.isBlank()) { %>
+
             <div class="text-muted">⚠ 장소를 선택하면 리뷰가 표시됩니다.</div>
 
         <% } else if (reviewList == null || reviewList.isEmpty()) { %>
+
             <div class="text-muted">아직 리뷰가 없습니다. 첫 리뷰를 남겨보세요!</div>
 
         <% } else { 
@@ -144,12 +146,11 @@
                 </div>
 
                 <div class="small text-muted mb-1">
-                    <%=r.get("user")%> · <%=r.get("createdAt")%>
+                    <%=r.get("user")%> · <%=r.get("created_at")%>
                 </div>
 
                 <div><%=r.get("content")%></div>
 
-                <!-- 작성자만 수정/삭제 버튼 표시 -->
                 <% if (writerId == loginUserId) { %>
                 <div class="mt-2">
                     <button class="btn btn-sm btn-outline-primary"
@@ -175,12 +176,13 @@
         <% if (canWrite) { %>
             <button class="btn btn-success w-100 py-2" onclick="openWriteModal()">리뷰 작성하기</button>
         <% } else { %>
-            <button class="btn btn-secondary w-100 py-2" disabled>⚠ 예약한 경기장만 리뷰 작성이 가능합니다</button>
+            <button class="btn btn-secondary w-100 py-2" disabled>
+                ⚠ 예약한 경기장을 이용한 사용자만 리뷰 작성이 가능합니다
+            </button>
         <% } %>
     <% } %>
 
 </div>
-
 
 <!-- 리뷰 작성 모달 -->
 <div class="modal fade" id="writeModal" tabindex="-1">
@@ -211,7 +213,6 @@
     </div>
   </div>
 </div>
-
 
 <!-- 리뷰 수정 모달 -->
 <div class="modal fade" id="editModal" tabindex="-1">
@@ -247,7 +248,6 @@
     </div>
   </div>
 </div>
-
 
 <script>
 /* -------- 리뷰 작성 -------- */
@@ -288,7 +288,6 @@ function submitReview() {
 
     return false;
 }
-
 
 /* -------- 리뷰 수정 -------- */
 function openEditModal(id, content, rating) {
@@ -332,7 +331,6 @@ function updateReview() {
 
     return false;
 }
-
 
 /* -------- 리뷰 삭제 -------- */
 function deleteReview(id) {

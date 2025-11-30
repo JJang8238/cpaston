@@ -25,13 +25,12 @@
     String fEmail    = loginUser.getEmail();
     String fRole     = loginUser.getRole();
     String fProfile  = (loginUser.getProfileImage() != null && !loginUser.getProfileImage().isEmpty())
-            ? ctx + "/uploads/" + loginUser.getProfileImage()
-            : ctx + "/assets/img/profile-default.png";
+                        ? loginUser.getProfileImage()
+                        : ctx + "/assets/img/profile-default.png";
 
     /* --------------------------- 내가 쓴 게시글 --------------------------- */
     List<Post> myPosts = new ArrayList<>();
     try (PostDAO dao = new PostDAO()) {
-        // ★ username이 null인 경우가 있으므로 이름으로 검색해야 오류가 안남
         myPosts = dao.listByAuthor(fUsername);
     } catch (Exception e) { e.printStackTrace(); }
 
@@ -44,7 +43,6 @@
 
     int totalReviewCount = myPlaceReviews.size() + myMatchReviews.size();
 
-    // 5개까지만 보여줄 리스트
     List<Map<String,Object>> placeLimit = (myPlaceReviews.size() > 5)
         ? myPlaceReviews.subList(0, 5)
         : myPlaceReviews;
@@ -61,17 +59,14 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-
     <meta charset="UTF-8" />
     <title>마이페이지</title>
     <link rel="icon" href="<%=ctx%>/assets/favicon.ico" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <style>
-        .limit-box {
-            max-height: 520px;
-            overflow: hidden;
-        }
+        .limit-box { max-height: 520px; overflow: hidden; }
+        h1 { font-weight: 700; }
     </style>
 </head>
 
@@ -100,18 +95,24 @@
 <main class="flex-grow-1">
 <div class="container py-5 px-4 px-lg-5">
 
-    <h1 class="fw-bold mb-4">마이페이지</h1>
+    <!-- 🔥 가운데 정렬 + 사용자 이름으로 제목 표시 -->
+    <h1 class="mb-5 text-center"><%=displayName%>님의 정보</h1>
 
     <div class="row g-4">
 
         <!-- -------------------- 프로필 카드 -------------------- -->
         <div class="col-md-4">
             <div class="card shadow-sm text-center">
-                <div class="card-body">
-                    <img src="<%=fProfile%>" class="rounded-circle mb-3"
+                <div class="card-body d-flex flex-column align-items-center justify-content-center text-center">
+
+                    <img src="<%=fProfile%>"
+                         class="rounded-circle mb-3"
                          style="width:140px;height:140px;object-fit:cover;">
-                    <h4 class="fw-bold"><%=fName%></h4>
+
+                    <h4 class="fw-bold mt-2"><%=fName%></h4>
                     <p class="text-muted mb-0"><small>역할(Role): <%=fRole%></small></p>
+
+                    <a href="<%=ctx%>/editProfile.jsp" class="btn btn-success w-75 mt-3">프로필 수정</a>
                 </div>
             </div>
         </div>
@@ -138,7 +139,6 @@
                 </div>
 
                 <div class="d-flex gap-2 mt-4">
-                  <a href="<%=ctx%>/editProfile.jsp" class="btn btn-primary">프로필 수정</a>
                   <a href="<%=ctx%>/main.jsp" class="btn btn-outline-secondary">홈으로</a>
                   <a href="<%=ctx%>/logout.jsp" class="btn btn-outline-danger ms-auto">로그아웃</a>
                 </div>
@@ -476,21 +476,33 @@
     </div>
 
 </div>
-
 </main>
 
 
+<!-- 🔥 리뉴얼된 FOOTER -->
 <footer class="mt-auto py-4 bg-dark text-light">
-  <div class="container text-center">
-    <small>Copyright &copy; 볼피또 2025</small>
-  </div>
+    <div class="container text-center">
+
+        <h5 class="fw-bold mb-2">
+            ⚽ Ballpitto – Play Together, Enjoy More
+        </h5>
+
+        <div class="small mb-2">
+            📍 위치 기반 경기 매칭 &nbsp; | &nbsp;
+            👥 파트너 찾기 &nbsp; | &nbsp;
+            📝 리뷰 & 커뮤니티
+        </div>
+
+        <small>Copyright © 볼피또 2025</small>
+
+    </div>
 </footer>
+
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    // 장소 리뷰 더보기
     var placeBtn = document.getElementById("placeMoreBtn");
     var placeHidden = document.getElementById("placeReviewHidden");
     var placeBox = document.getElementById("placeReviewBox");
@@ -503,7 +515,6 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // 경기 리뷰 더보기
     var matchBtn = document.getElementById("matchMoreBtn");
     var matchHidden = document.getElementById("matchReviewHidden");
     var matchBox = document.getElementById("matchReviewBox");

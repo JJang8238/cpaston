@@ -1,4 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="true"%>
+<%@ page import="java.util.List" %>
+<%@ page import="dao.UserDAO" %>
 <%@ page import="dto.User" %>
 
 <%
@@ -25,10 +27,10 @@
 <meta charset="UTF-8">
 <title>관리자 페이지</title>
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
 
 <style>
-
 /* ====== 전체 레이아웃 ====== */
 body {
     background: #f1f3f5;
@@ -36,7 +38,7 @@ body {
 
 .layout {
     display: flex;
-    min-height: calc(100vh - 56px);
+    min-height: calc(100vh - 56px); /* 상단바 높이 제외 */
 }
 
 /* ===== 사이드바 ===== */
@@ -87,10 +89,9 @@ body {
     border: 1px solid #dee2e6;
     box-shadow: 0 2px 6px rgba(0,0,0,0.05);
 }
-
 </style>
-</head>
 
+</head>
 <body>
 
 <!-- 상단바 -->
@@ -98,7 +99,10 @@ body {
     <span class="navbar-brand fw-bold">관리자 페이지</span>
 
     <div>
-        <a href="<%=ctx%>/admin/admin_main.jsp" class="btn btn-outline-light btn-sm me-3">홈</a>
+        <a href="<%=ctx%>/admin/admin_main.jsp"
+           class="btn btn-outline-light btn-sm me-3">
+            홈
+        </a>
         <span class="text-white fw-bold"><%=loginUser.getName()%> 관리자님</span>
     </div>
 </nav>
@@ -111,12 +115,14 @@ body {
 
         <a href="<%=ctx%>/admin/admin_menu.jsp?page=user">👤 회원 관리</a>
         <a href="<%=ctx%>/admin/admin_menu.jsp?page=match">⚽ 경기 관리</a>
+        <!-- 리뷰 관리 → 서블릿 호출 (기존 그대로) -->
         <a href="<%=ctx%>/admin/place-review">⭐ 리뷰 관리</a>
         <a href="<%=ctx%>/admin/admin_menu.jsp?page=report">🚨 신고 처리</a>
         <a href="<%=ctx%>/admin/admin_menu.jsp?page=board">📝 커뮤니티 관리</a>
 
         <hr style="border-color:#495057;">
-        <a href="<%=ctx%>/main.jsp">🏠 사용자 홈</a>
+        <!-- 경로도 기존 그대로 유지 -->
+        <a href="<%=ctx%>/admin/admin_main.jsp">🏠 사용자 홈</a>
         <a href="<%=ctx%>/logout.jsp">🔓 로그아웃</a>
     </div>
 
@@ -131,24 +137,24 @@ body {
 
         <% } else if ("user".equals(pageParam)) { %>
 
-            <jsp:include page="pages/user_manage.jsp"/>
+            <jsp:include page="pages/user_manage.jsp" />
 
         <% } else if ("match".equals(pageParam)) { %>
 
-            <jsp:include page="pages/match_manage.jsp"/>
+            <jsp:include page="pages/match_manage.jsp" />
 
         <% } else if ("review".equals(pageParam)) { %>
 
-            <jsp:include page="pages/review_manage.jsp"/>
+            <jsp:include page="pages/review_manage.jsp" />
 
         <% } else if ("report".equals(pageParam)) { %>
 
-            <jsp:include page="pages/report_manage.jsp"/>
-
+            <jsp:include page="pages/report_manage.jsp" />
+		
         <% } else if ("board".equals(pageParam)) { %>
 
-            <jsp:include page="pages/board_manage.jsp"/>
-
+            <jsp:include page="pages/board_manage.jsp" />
+	
         <% } else { %>
 
             <p>잘못된 페이지입니다.</p>

@@ -27,34 +27,68 @@
 <meta charset="UTF-8">
 <title>관리자 페이지</title>
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
 
 <style>
-    .layout {
-        display: flex;
-        min-height: 100vh;
-    }
-    .sidebar {
-        width: 220px;
-        background: #343a40;
-        padding: 20px;
-        color: white;
-    }
-    .sidebar a {
-        display: block;
-        color: #ddd;
-        padding: 10px 0;
-        text-decoration: none;
-        margin: 5px 0;
-    }
-    .sidebar a:hover {
-        color: white;
-    }
-    .content {
-        flex: 1;
-        padding: 30px;
-        background: #f8f9fa;
-    }
+/* ====== 전체 레이아웃 ====== */
+body {
+    background: #f1f3f5;
+}
+
+.layout {
+    display: flex;
+    min-height: calc(100vh - 56px); /* 상단바 높이 제외 */
+}
+
+/* ===== 사이드바 ===== */
+.sidebar {
+    width: 230px;
+    background: #212529;
+    padding: 25px 20px;
+    color: white;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.15);
+}
+
+.sidebar-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.sidebar a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #ced4da;
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-size: 15px;
+    text-decoration: none;
+    margin-bottom: 5px;
+    transition: 0.15s;
+}
+
+.sidebar a:hover {
+    background: #343a40;
+    color: #fff;
+}
+
+/* ===== 콘텐츠 영역 ===== */
+.content {
+    flex: 1;
+    padding: 35px;
+    background: #f8f9fa;
+}
+
+/* 콘텐츠 박스 */
+.content-box {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    border: 1px solid #dee2e6;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
 </style>
 
 </head>
@@ -62,38 +96,43 @@
 
 <!-- 상단바 -->
 <nav class="navbar navbar-dark bg-dark px-4">
-    <span class="navbar-brand">관리자 페이지</span>
+    <span class="navbar-brand fw-bold">관리자 페이지</span>
 
     <div>
-        <a href="<%=ctx%>/admin/admin_main.jsp" class="btn btn-outline-light btn-sm me-3">
+        <a href="<%=ctx%>/admin/admin_main.jsp"
+           class="btn btn-outline-light btn-sm me-3">
             홈
         </a>
-        <span class="text-white"><%=loginUser.getName()%> 관리자님</span>
+        <span class="text-white fw-bold"><%=loginUser.getName()%> 관리자님</span>
     </div>
 </nav>
 
 <div class="layout">
+
+    <!-- ▣ 사이드바 -->
     <div class="sidebar">
-        <a href="<%=ctx%>/admin/admin_menu.jsp?page=user">회원 관리</a>
-        <a href="<%=ctx%>/admin/admin_menu.jsp?page=match">경기 관리</a>
+        <div class="sidebar-title">관리 메뉴</div>
 
-        <!-- 리뷰 관리 → 서블릿 호출 -->
-        <a href="<%=ctx%>/admin/place-review">리뷰 관리</a>
+        <a href="<%=ctx%>/admin/admin_menu.jsp?page=user">👤 회원 관리</a>
+        <a href="<%=ctx%>/admin/admin_menu.jsp?page=match">⚽ 경기 관리</a>
+        <!-- 리뷰 관리 → 서블릿 호출 (기존 그대로) -->
+        <a href="<%=ctx%>/admin/place-review">⭐ 리뷰 관리</a>
+        <a href="<%=ctx%>/admin/admin_menu.jsp?page=report">🚨 신고 처리</a>
+        <a href="<%=ctx%>/admin/admin_menu.jsp?page=board">📝 커뮤니티 관리</a>
 
-        <a href="<%=ctx%>/admin/admin_menu.jsp?page=report">신고 처리</a>
-
-        <a href="<%=ctx%>/admin/admin_menu.jsp?page=board">커뮤니티 관리</a>
-
-        <hr>
-        <a href="<%=ctx%>/admin/admin_main.jsp">사용자 홈</a>
-        <a href="<%=ctx%>/logout.jsp">로그아웃</a>
+        <hr style="border-color:#495057;">
+        <!-- 경로도 기존 그대로 유지 -->
+        <a href="<%=ctx%>/admin/admin_main.jsp">🏠 사용자 홈</a>
+        <a href="<%=ctx%>/logout.jsp">🔓 로그아웃</a>
     </div>
 
+    <!-- ▣ 콘텐츠 영역 -->
     <div class="content">
 
+        <div class="content-box">
         <% if (pageParam == null) { %>
 
-            <h3>관리자 메인</h3>
+            <h3 class="fw-bold">관리자 메인</h3>
             <p>왼쪽 메뉴에서 원하는 기능을 선택하세요.</p>
 
         <% } else if ("user".equals(pageParam)) { %>
@@ -106,25 +145,25 @@
 
         <% } else if ("review".equals(pageParam)) { %>
 
-            <!-- 리뷰 관리 -->
             <jsp:include page="pages/review_manage.jsp" />
 
         <% } else if ("report".equals(pageParam)) { %>
 
             <jsp:include page="pages/report_manage.jsp" />
 		
-		<% } else if ("board".equals(pageParam)) { %>
+        <% } else if ("board".equals(pageParam)) { %>
 
             <jsp:include page="pages/board_manage.jsp" />
 	
-
         <% } else { %>
 
             <p>잘못된 페이지입니다.</p>
 
         <% } %>
+        </div>
 
     </div>
+
 </div>
 
 </body>

@@ -7,6 +7,7 @@
 <%@ page import="dto.Post" %>
 <%@ page import="dto.Notice" %>
 <%@ page import="dto.Board" %>
+
 <%
     request.setCharacterEncoding("UTF-8");
     String ctx = request.getContextPath();
@@ -35,7 +36,7 @@
 
     try (PostDAO dao = new PostDAO()) {
         if (categoryId == 1) {
-            posts = dao.listAll();     // 전체
+            posts = dao.listAll();
         } else {
             posts = dao.listByBoardId(categoryId);
         }
@@ -58,7 +59,7 @@
 <style>
 body { background:#f8f9fa; }
 .best-badge { background:#0d6efd !important; color:white !important; font-weight:bold; }
-.notice-card { background:#fff9d6; border-left:6px solid #ffc107; }
+.notice-card { background:#fff9d6; border-left:6px solid #ffc107; cursor:pointer; }
 </style>
 </head>
 
@@ -78,7 +79,7 @@ body { background:#f8f9fa; }
     <!-- 공지사항 -->
     <div class="mb-4">
       <% if (notice != null) { %>
-        <div class="card notice-card shadow-sm">
+        <div class="card notice-card shadow-sm" onclick="openNoticeModal(<%=notice.getId()%>)">
           <div class="card-body">
             <h5 class="fw-bold text-dark mb-1">📢 공지사항</h5>
             <p class="mb-0"><%= notice.getTitle() %></p>
@@ -89,22 +90,26 @@ body { background:#f8f9fa; }
       <% } %>
     </div>
 
-  <div class="row">
+    <!-- 관리자 공지 작성 -->
+    <% if (loginUser != null && "admin".equals(loginUser.getRole())) { %>
+        <div class="mb-4 text-end">
+            <a href="<%=ctx%>/admin/admin_notice.jsp" class="btn btn-sm btn-warning">공지 작성</a>
+        </div>
+    <% } %>
 
-    <!-- 왼쪽 카테고리 -->
+    <div class="row">
+
+    <!-- 카테고리 -->
     <aside class="col-md-3 mb-5">
-
       <div class="list-group shadow-sm">
         <a href="<%=ctx%>/community.jsp?category=1"
-           class="list-group-item list-group-item-action <%= (categoryId==1?"active":"") %>">
-           전체
-        </a>
+           class="list-group-item list-group-item-action <%= (categoryId==1?"active":"") %>">전체</a>
 
         <% for (Board b : boards) {
              if (b.getName().equals("전체")) continue;
         %>
           <a href="<%=ctx%>/community.jsp?category=<%=b.getId()%>"
-             class="list-group-item list-group-item-action <%= (b.getId()==categoryId ? "active" : "") %>">
+             class="list-group-item list-group-item-action <%= (b.getId()==categoryId?"active":"") %>">
              <%= b.getName() %>
           </a>
         <% } %>
@@ -113,7 +118,6 @@ body { background:#f8f9fa; }
       <div class="d-grid mt-3">
         <a href="<%=ctx%>/write.jsp?board_id=<%=categoryId%>" class="btn btn-primary">글쓰기</a>
       </div>
-
     </aside>
 
     <!-- 게시글 목록 -->
@@ -125,13 +129,14 @@ body { background:#f8f9fa; }
       </div>
 
       <% if (posts.isEmpty()) { %>
+
         <div class="alert alert-info">해당 카테고리에 게시글이 없습니다.</div>
+
       <% } else { %>
 
       <div class="row row-cols-1 g-3">
 
-      <%
-        for (Post p : posts) {
+      <% for (Post p : posts) {
 
             boolean isReported = false;
             if (loginUser != null) {
@@ -165,8 +170,6 @@ body { background:#f8f9fa; }
               <p class="text-muted small mb-2"><%= p.getAuthor() %> · <%= dateStr %></p>
 
               <div class="d-flex align-items-center justify-content-between">
-
-                <!-- 좋아요/싫어요 -->
                 <div class="d-flex align-items-center gap-2">
                   <button class="btn btn-sm btn-outline-primary btn-like" data-id="<%=p.getId()%>">
                     👍 <span class="like-count"><%=p.getLikes()%></span>
@@ -177,7 +180,6 @@ body { background:#f8f9fa; }
                   </button>
                 </div>
 
-                <!-- 신고 -->
                 <% if (isReported) { %>
                     <button class="btn btn-sm btn-danger" disabled>🚨 신고됨(나)</button>
                 <% } else { %>
@@ -199,11 +201,37 @@ body { background:#f8f9fa; }
   </div>
 </main>
 
-<!-- ❤️ 좋아요/싫어요/신고 AJAX -->
+<!-- ⭐⭐ 공지 상세보기 모달 추가 ⭐⭐ -->
+<div class="modal fade" id="noticeModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">공지사항</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="noticeBody">불러오는 중...</div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- ❤️ 좋아요/싫어요/신고 + 공지 팝업 JS -->
 <script>
+function openNoticeModal(id) {
+    fetch("<%=ctx%>/notice?id=" + id)
+        .then(res => res.text())
+        .then(html => {
+            document.getElementById("noticeBody").innerHTML = html;
+            new bootstrap.Modal(document.getElementById("noticeModal")).show();
+        });
+}
+
 document.addEventListener("DOMContentLoaded", function() {
 
-    /* 👍 좋아요 */
     document.querySelectorAll(".btn-like").forEach(btn => {
         btn.addEventListener("click", function() {
             let postId = this.dataset.id;
@@ -215,11 +243,10 @@ document.addEventListener("DOMContentLoaded", function() {
                 body: "action=like&id=" + postId
             })
             .then(res => res.json())
-            .then(data => updateUI(container)(data));   // ★ 수정됨
+            .then(data => updateUI(container)(data));
         });
     });
 
-    /* 👎 싫어요 */
     document.querySelectorAll(".btn-dislike").forEach(btn => {
         btn.addEventListener("click", function() {
             let postId = this.dataset.id;
@@ -231,11 +258,10 @@ document.addEventListener("DOMContentLoaded", function() {
                 body: "action=dislike&id=" + postId
             })
             .then(res => res.json())
-            .then(data => updateUI(container)(data));   // ★ 수정됨
+            .then(data => updateUI(container)(data));
         });
     });
 
-    /* 🚨 신고 */
     document.querySelectorAll(".btn-report").forEach(btn => {
         btn.addEventListener("click", function() {
 
@@ -250,7 +276,6 @@ document.addEventListener("DOMContentLoaded", function() {
             })
             .then(res => res.json())
             .then(res => {
-
                 if (res.ok) {
                     alert("신고가 접수되었습니다.");
                     location.reload();
@@ -270,11 +295,11 @@ document.addEventListener("DOMContentLoaded", function() {
 
             const bestBadge = container.querySelector(".best-badge");
             if (bestBadge) {
-                bestBadge.style.display = (data.likes >= 5 && data.dislikes <= 3) ? "inline-block" : "none";
+                bestBadge.style.display =
+                    (data.likes >= 5 && data.dislikes <= 3) ? "inline-block" : "none";
             }
         }
     }
-
 });
 </script>
 

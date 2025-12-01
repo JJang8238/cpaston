@@ -288,6 +288,12 @@ function addPlace(place) {
     const lat = parseFloat(place.y);
     const lng = parseFloat(place.x);
 
+ // 🔥 거리 계산
+    const distKm = getDistance(userCenter.lat, userCenter.lng, lat, lng);
+    const distText = distKm < 1
+        ? Math.round(distKm * 1000) + "m"
+        : distKm.toFixed(1) + "km";
+    
     const marker = new kakao.maps.Marker({
         position:new kakao.maps.LatLng(lat, lng),
         map:kakaoMap,
@@ -296,9 +302,16 @@ function addPlace(place) {
 
     markers.push(marker);
 
+ // 🔥 리스트에 거리 포함
     const li = document.createElement("li");
     li.className = "list-group-item list-group-item-action";
-    li.textContent = place.place_name;
+
+    li.innerHTML =
+        "<div class='d-flex justify-content-between align-items-center'>" +
+            "<span>" + place.place_name + "</span>" +
+            "<span class='badge bg-primary'>" + distText + "</span>" +
+        "</div>";
+
     li.onclick = () => openReviewPanel(place);
 
     document.getElementById("placesList").appendChild(li);
@@ -548,6 +561,27 @@ function searchFromCurrentMapCenter() {
 function hideReviewPanel(){
     document.getElementById("reviewPanel").style.display = "none";
 }
+
+//거리 계산 함수
+function getDistance(lat1, lon1, lat2, lon2) {
+    function toRad(value) {
+        return value * Math.PI / 180;
+    }
+
+    const R = 6371; // 지구 반지름 km
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const d = R * c; // km 단위
+
+    return d;  // km
+}
+
 </script>
 
 <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=f802c143efc8e04c44d5cbc892fe3198&libraries=services&autoload=false"></script>

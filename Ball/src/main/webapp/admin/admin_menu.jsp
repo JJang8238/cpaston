@@ -1,154 +1,164 @@
-<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="true" %>
-    <%@ page import="dto.User" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="true"%>
+<%@ page import="dto.User" %>
 
-        <% // 로그인 / 권한 체크 Object obj=session.getAttribute("loginUser"); if (obj==null) {
-            response.sendRedirect(request.getContextPath() + "/index.jsp" ); return; } User loginUser=(User) obj; if
-            (!"admin".equalsIgnoreCase(loginUser.getRole())) { response.sendRedirect(request.getContextPath()
-            + "/index.jsp" ); return; } String ctx=request.getContextPath(); String
-            pageParam=request.getParameter("page"); %>
+<%
+    // 로그인 / 권한 체크
+    Object obj = session.getAttribute("loginUser");
+    if (obj == null) {
+        response.sendRedirect(request.getContextPath() + "/index.jsp");
+        return;
+    }
 
-            <!DOCTYPE html>
-            <html lang="ko">
+    User loginUser = (User) obj;
+    if (!"admin".equalsIgnoreCase(loginUser.getRole())) {
+        response.sendRedirect(request.getContextPath() + "/index.jsp");
+        return;
+    }
 
-            <head>
-                <meta charset="UTF-8">
-                <title>관리자 페이지</title>
+    String ctx = request.getContextPath();
+    String pageParam = request.getParameter("page");
+%>
 
-                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>관리자 페이지</title>
 
-                <style>
-                    /* ====== 전체 레이아웃 ====== */
-                    body {
-                        background: #f1f3f5;
-                    }
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
 
-                    .layout {
-                        display: flex;
-                        min-height: calc(100vh - 56px);
-                    }
+<style>
 
-                    /* ===== 사이드바 ===== */
-                    .sidebar {
-                        width: 230px;
-                        background: #212529;
-                        padding: 25px 20px;
-                        color: white;
-                        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
-                    }
+/* ====== 전체 레이아웃 ====== */
+body {
+    background: #f1f3f5;
+}
 
-                    .sidebar-title {
-                        font-size: 18px;
-                        font-weight: bold;
-                        margin-bottom: 15px;
-                    }
+.layout {
+    display: flex;
+    min-height: calc(100vh - 56px);
+}
 
-                    .sidebar a {
-                        display: flex;
-                        align-items: center;
-                        gap: 8px;
-                        color: #ced4da;
-                        padding: 10px 12px;
-                        border-radius: 6px;
-                        font-size: 15px;
-                        text-decoration: none;
-                        margin-bottom: 5px;
-                        transition: 0.15s;
-                    }
+/* ===== 사이드바 ===== */
+.sidebar {
+    width: 230px;
+    background: #212529;
+    padding: 25px 20px;
+    color: white;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.15);
+}
 
-                    .sidebar a:hover {
-                        background: #343a40;
-                        color: #fff;
-                    }
+.sidebar-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
 
-                    /* ===== 콘텐츠 영역 ===== */
-                    .content {
-                        flex: 1;
-                        padding: 35px;
-                        background: #f8f9fa;
-                    }
+.sidebar a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #ced4da;
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-size: 15px;
+    text-decoration: none;
+    margin-bottom: 5px;
+    transition: 0.15s;
+}
 
-                    /* 콘텐츠 박스 */
-                    .content-box {
-                        background: white;
-                        padding: 25px;
-                        border-radius: 10px;
-                        border: 1px solid #dee2e6;
-                        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-                    }
-                </style>
-            </head>
+.sidebar a:hover {
+    background: #343a40;
+    color: #fff;
+}
 
-            <body>
+/* ===== 콘텐츠 영역 ===== */
+.content {
+    flex: 1;
+    padding: 35px;
+    background: #f8f9fa;
+}
 
-                <!-- 상단바 -->
-                <nav class="navbar navbar-dark bg-dark px-4">
-                    <span class="navbar-brand fw-bold">관리자 페이지</span>
+/* 콘텐츠 박스 */
+.content-box {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    border: 1px solid #dee2e6;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
 
-                    <div>
-                        <a href="<%=ctx%>/admin/admin_main.jsp" class="btn btn-outline-light btn-sm me-3">홈</a>
-                        <span class="text-white fw-bold">
-                            <%=loginUser.getName()%> 관리자님
-                        </span>
-                    </div>
-                </nav>
+</style>
+</head>
 
-                <div class="layout">
+<body>
 
-                    <!-- ▣ 사이드바 -->
-                    <div class="sidebar">
-                        <div class="sidebar-title">관리 메뉴</div>
+<!-- 상단바 -->
+<nav class="navbar navbar-dark bg-dark px-4">
+    <span class="navbar-brand fw-bold">관리자 페이지</span>
 
-                        <a href="<%=ctx%>/admin/admin_menu.jsp?page=user">👤 회원 관리</a>
-                        <a href="<%=ctx%>/admin/admin_menu.jsp?page=match">⚽ 경기 관리</a>
-                        <a href="<%=ctx%>/admin/place-review">⭐ 리뷰 관리</a>
-                        <a href="<%=ctx%>/admin/admin_menu.jsp?page=report">🚨 신고 처리</a>
-                        <a href="<%=ctx%>/admin/admin_menu.jsp?page=board">📝 커뮤니티 관리</a>
+    <div>
+        <a href="<%=ctx%>/admin/admin_main.jsp" class="btn btn-outline-light btn-sm me-3">홈</a>
+        <span class="text-white fw-bold"><%=loginUser.getName()%> 관리자님</span>
+    </div>
+</nav>
 
-                        <hr style="border-color:#495057;">
-                        <a href="<%=ctx%>/main.jsp">🏠 사용자 홈</a>
-                        <a href="<%=ctx%>/logout.jsp">🔓 로그아웃</a>
-                    </div>
+<div class="layout">
 
-                    <!-- ▣ 콘텐츠 영역 -->
-                    <div class="content">
+    <!-- ▣ 사이드바 -->
+    <div class="sidebar">
+        <div class="sidebar-title">관리 메뉴</div>
 
-                        <div class="content-box">
-                            <% if (pageParam==null) { %>
+        <a href="<%=ctx%>/admin/admin_menu.jsp?page=user">👤 회원 관리</a>
+        <a href="<%=ctx%>/admin/admin_menu.jsp?page=match">⚽ 경기 관리</a>
+        <a href="<%=ctx%>/admin/place-review">⭐ 리뷰 관리</a>
+        <a href="<%=ctx%>/admin/admin_menu.jsp?page=report">🚨 신고 처리</a>
+        <a href="<%=ctx%>/admin/admin_menu.jsp?page=board">📝 커뮤니티 관리</a>
 
-                                <h3 class="fw-bold">관리자 메인</h3>
-                                <p>왼쪽 메뉴에서 원하는 기능을 선택하세요.</p>
+        <hr style="border-color:#495057;">
+        <a href="<%=ctx%>/main.jsp">🏠 사용자 홈</a>
+        <a href="<%=ctx%>/logout.jsp">🔓 로그아웃</a>
+    </div>
 
-                                <% } else if ("user".equals(pageParam)) { %>
+    <!-- ▣ 콘텐츠 영역 -->
+    <div class="content">
 
-                                    <jsp:include page="pages/user_manage.jsp" />
+        <div class="content-box">
+        <% if (pageParam == null) { %>
 
-                                    <% } else if ("match".equals(pageParam)) { %>
+            <h3 class="fw-bold">관리자 메인</h3>
+            <p>왼쪽 메뉴에서 원하는 기능을 선택하세요.</p>
 
-                                        <jsp:include page="pages/match_manage.jsp" />
+        <% } else if ("user".equals(pageParam)) { %>
 
-                                        <% } else if ("review".equals(pageParam)) { %>
+            <jsp:include page="pages/user_manage.jsp"/>
 
-                                            <jsp:include page="pages/review_manage.jsp" />
+        <% } else if ("match".equals(pageParam)) { %>
 
-                                            <% } else if ("report".equals(pageParam)) { %>
+            <jsp:include page="pages/match_manage.jsp"/>
 
-                                                <jsp:include page="pages/report_manage.jsp" />
+        <% } else if ("review".equals(pageParam)) { %>
 
-                                                <% } else if ("board".equals(pageParam)) { %>
+            <jsp:include page="pages/review_manage.jsp"/>
 
-                                                    <jsp:include page="pages/board_manage.jsp" />
+        <% } else if ("report".equals(pageParam)) { %>
 
-                                                    <% } else { %>
+            <jsp:include page="pages/report_manage.jsp"/>
 
-                                                        <p>잘못된 페이지입니다.</p>
+        <% } else if ("board".equals(pageParam)) { %>
 
-                                                        <% } %>
-                        </div>
+            <jsp:include page="pages/board_manage.jsp"/>
 
-                    </div>
+        <% } else { %>
 
-                </div>
+            <p>잘못된 페이지입니다.</p>
 
-            </body>
+        <% } %>
+        </div>
 
-            </html>
+    </div>
+
+</div>
+
+</body>
+</html>

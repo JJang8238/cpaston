@@ -1,164 +1,350 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.util.*" %>
-<%@ page import="dao.PostDAO, dto.Post" %>
-<%@ page import="dto.User" %>
+<%@ page import="dao.PostDAO, dao.NoticeDAO, dao.BoardDAO" %>
+<%@ page import="dto.User, dto.Post, dto.Notice, dto.Board" %>
 
 <%
-  request.setCharacterEncoding("UTF-8");
-  String ctx = request.getContextPath();  // 예: /Ball
+    request.setCharacterEncoding("UTF-8");
+    String ctx = request.getContextPath();
 
-  // 로그인 유저
-  User loginUser = (User) session.getAttribute("loginUser");
+    User loginUser = (User) session.getAttribute("loginUser");
 
-  // 🔥 댓글 Map 가져오기
-  Map<Integer, List<String>> COMMENTS =
-      (Map<Integer, List<String>>) application.getAttribute("COMMENTS_BY_ID");
-  if (COMMENTS == null) {
-      COMMENTS = new LinkedHashMap<>();
-      application.setAttribute("COMMENTS_BY_ID", COMMENTS);
-  }
+    String categoryParam = request.getParameter("category");
+    int categoryId = 1;
+    try { categoryId = Integer.parseInt(categoryParam); } catch (Exception ignore) {}
 
-  // 카테고리
-  String category = request.getParameter("category");
-  if (category == null) category = "전체";
-  List<String> allowed = Arrays.asList("전체","인기글","동네질문");
-  if (!allowed.contains(category)) category = "전체";
+    List<Board> boards = new ArrayList<>();
+    try (BoardDAO bdao = new BoardDAO()) { boards = bdao.list(); }
 
-  // DB에서 목록 조회
-  List<Post> posts;
-  try (PostDAO dao = new PostDAO()) {
-      posts = dao.list(category);
-  }
+    String categoryName = "전체";
+    for (Board b : boards) if (b.getId() == categoryId) categoryName = b.getName();
 
-  String safeCategory = category
-      .replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
-      .replace("\"","&quot;").replace("'","&#39;");
+    List<Post> posts = new ArrayList<>();
+    try (PostDAO dao = new PostDAO()) {
+        if (categoryId == 1) posts = dao.listAll();
+        else posts = dao.listByBoardId(categoryId);
+    }
+
+    Notice notice = null;
+    try (NoticeDAO ndao = new NoticeDAO()) { notice = ndao.getLatestNotice(); }
 %>
 
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>볼피또 - 커뮤니티</title>
+<meta charset="UTF-8">
+<title>커뮤니티</title>
 
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-  <style>
-    body { background:#f8f9fa; }
-  </style>
+<!-- ⭐⭐ UI/UX 전용 CSS (기능 절대 수정 X) ⭐⭐ -->
+<style>
+    body {
+        background:#f3f4f6;
+        font-family:'Pretendard', sans-serif;
+    }
+
+    header h1 {
+        font-size:2.3rem;
+        font-weight:700;
+        color:#0d6efd;
+    }
+
+    /* 컨테이너 넓게 (졸업작품 느낌) */
+    .container-xl {
+        max-width:1300px;
+    }
+
+    /* 공지 박스 */
+    .notice-card {
+        background:#fffceb;
+        border:1px solid #ffe39f;
+        border-radius:12px;
+        padding:18px 24px;
+        cursor:pointer;
+        transition:.15s;
+    }
+    .notice-card:hover {
+        background:#fff6d3;
+    }
+
+    /* 카테고리 박스 (네이버 스타일 + 더 큼직하게) */
+    .category-box {
+        background:white;
+        border:1px solid #e5e7eb;
+        border-radius:14px;
+        padding:20px;
+    }
+    .category-box .list-group-item {
+        border:none;
+        padding:15px 20px;
+        margin-bottom:6px;
+        font-size:16px;
+        border-radius:10px !important;
+    }
+    .category-box .list-group-item.active {
+        background:#0d6efd !important;
+        color:white !important;
+        font-weight:600;
+    }
+    .category-box .list-group-item:not(.active):hover {
+        background:#eef4ff;
+        color:#0d6efd;
+    }
+
+    .btn-write {
+        border-radius:10px;
+        font-weight:600;
+        padding:12px;
+        width:100%;
+        margin-top:12px;
+    }
+
+    /* 게시글 리스트 (네이버 스타일 + 서비스형) */
+    .post-item {
+        background:white;
+        border-radius:12px;
+        border:1px solid #e5e7eb;
+        padding:20px 22px;
+        display:flex;
+        align-items:center;
+        transition:.15s;
+        margin-bottom:14px;
+    }
+    .post-item:hover {
+        background:#fafbfd;
+        box-shadow:0 3px 10px rgba(0,0,0,0.06);
+    }
+
+    .post-title {
+        font-size:18px;
+        font-weight:600;
+        color:#111;
+        text-decoration:none;
+    }
+    .post-title:hover {
+        color:#0d6efd;
+    }
+
+    .post-meta {
+        font-size:14px;
+        color:#666;
+        margin-top:6px;
+    }
+
+    .post-actions {
+        margin-left:auto;
+        display:flex;
+        gap:6px;
+    }
+
+    .btn-like, .btn-dislike, .btn-report {
+        padding:4px 10px;
+        font-size:13px;
+        border-radius:8px;
+    }
+
+    .badge-best {
+        background:#0d6efd;
+        color:white;
+        font-size:11px;
+        padding:3px 6px;
+        border-radius:4px;
+        margin-left:4px;
+    }
+</style>
+
 </head>
+
 
 <body class="d-flex flex-column min-vh-100">
 
-  <jsp:include page="/nav.jsp" />
+<jsp:include page="/nav.jsp" />
 
-  <header class="py-5 bg-white border-bottom mb-4">
-    <div class="container text-center">
-      <h1 class="fw-bold text-primary mb-2">커뮤니티</h1>
-      <p class="text-muted mb-0">동네 소식, 질문, 자유글을 나누는 공간입니다.</p>
+<header class="py-5 bg-white border-bottom mb-4">
+  <div class="container-xl text-center">
+    <h1>커뮤니티</h1>
+    <p class="text-muted">동네 소식, 질문, 자유글을 나누는 공간입니다.</p>
+  </div>
+</header>
+
+<main class="container-xl pb-5">
+
+    <!-- 공지 -->
+    <div class="mb-4">
+      <% if (notice != null) { %>
+        <div class="notice-card shadow-sm">
+            <h5 class="fw-bold mb-1">📢 공지사항</h5>
+            <p class="mb-0"><%= notice.getTitle() %></p>
+        </div>
+      <% } else { %>
+        <div class="alert alert-warning">📢 현재 등록된 공지사항이 없습니다.</div>
+      <% } %>
     </div>
-  </header>
 
-  <main class="container flex-grow-1 pb-5">
     <div class="row">
 
-      <!-- 사이드 -->
-      <aside class="col-md-3 mb-5">
-        <div class="list-group shadow-sm">
-          <a href="<%=ctx%>/community.jsp?category=전체"
-             class="list-group-item list-group-item-action <%= "전체".equals(category) ? "active" : "" %>">전체</a>
-          <a href="<%=ctx%>/community.jsp?category=인기글"
-             class="list-group-item list-group-item-action <%= "인기글".equals(category) ? "active" : "" %>">인기글</a>
-          <a href="<%=ctx%>/community.jsp?category=동네질문"
-             class="list-group-item list-group-item-action <%= "동네질문".equals(category) ? "active" : "" %>">동네질문</a>
-        </div>
+        <!-- 왼쪽 카테고리 -->
+        <aside class="col-md-3 mb-4">
+            <div class="category-box shadow-sm">
 
-        <div class="d-grid mt-3">
-          <a href="<%=ctx%>/write.jsp?category=<%=category%>" class="btn btn-primary">글쓰기</a>
-        </div>
-      </aside>
+                <a href="<%=ctx%>/community.jsp?category=1"
+                    class="list-group-item list-group-item-action <%= (categoryId==1?"active":"") %>">
+                    전체
+                </a>
 
-      <!-- 목록 -->
-      <section class="col-md-9 mb-5">
-        <div class="d-flex align-items-center gap-2 mb-2">
-          <h4 class="fw-bold mb-0"><%= safeCategory %> 게시글</h4>
-          <span class="badge bg-secondary">총 <%= posts.size() %>건</span>
-        </div>
+                <% for (Board b : boards) {
+                     if ("전체".equals(b.getName())) continue;
+                %>
+                    <a href="<%=ctx%>/community.jsp?category=<%=b.getId()%>"
+                       class="list-group-item list-group-item-action <%= (b.getId()==categoryId ? "active" : "") %>">
+                       <%= b.getName() %>
+                    </a>
+                <% } %>
 
-        <% if (posts.isEmpty()) { %>
-
-          <div class="alert alert-info">해당 카테고리에는 게시글이 없습니다.</div>
-
-        <% } else { %>
-
-          <div class="row row-cols-1 g-3">
-          <% for (Post p : posts) {
-
-              // 제목 안전 처리
-              String title = (p.getTitle()==null?"":p.getTitle())
-                 .replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
-                 .replace("\"","&quot;").replace("'","&#39;");
-
-              String dateStr = (p.getCreatedAt()==null) ? "" :
-                   new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm").format(p.getCreatedAt());
-
-              // 🔥 댓글 개수 가져오기
-              int commentCount = 0;
-              if (COMMENTS.containsKey(p.getId())) {
-                  commentCount = COMMENTS.get(p.getId()).size();
-              }
-
-          %>
-
-            <div class="col">
-              <div class="card h-100 shadow-sm">
-                <div class="card-body position-relative">
-
-                  <!-- 제목(링크) -->
-                  <a href="<%=ctx%>/post.jsp?id=<%=p.getId()%>"
-                     class="stretched-link text-decoration-none">
-                    <h5 class="card-title text-dark mb-1"><%= title %></h5>
-                  </a>
-
-                  <p class="card-text text-muted small mb-1">
-                    <%= p.getAuthor() %> · <%= dateStr %>
-                  </p>
-
-                  <!-- 🔥 댓글 개수 출력 -->
-                  <p class="small text-muted mb-0">
-                    💬 댓글 <%= commentCount %>개
-                  </p>
-
-                </div>
-              </div>
             </div>
 
-          <% } %>
-          </div>
+            <a href="<%=ctx%>/write.jsp?board_id=<%=categoryId%>" class="btn btn-primary btn-write">
+                글쓰기
+            </a>
+        </aside>
 
-        <% } %>
+        <!-- 게시글 목록 -->
+        <section class="col-md-9">
 
-      </section>
+            <h4 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                <%= categoryName %> 게시글
+                <span class="badge bg-secondary">총 <%= posts.size() %>건</span>
+            </h4>
+
+            <% if (posts.isEmpty()) { %>
+                <div class="alert alert-info">해당 카테고리에 게시글이 없습니다.</div>
+            <% } else { %>
+
+                <% for (Post p : posts) {
+
+                    boolean isReported = false;
+                    if (loginUser != null) {
+                        try (PostDAO dao = new PostDAO()) {
+                            isReported = dao.didUserReport(p.getId(), loginUser.getId());
+                        }
+                    }
+
+                    String title = (p.getTitle()==null?"":p.getTitle())
+                        .replace("&","&amp;").replace("<","&lt;")
+                        .replace(">","&gt;").replace("\"","&quot;").replace("'","&#39;");
+
+                    String dateStr =
+                        (p.getCreatedAt()==null) ? "" :
+                        new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm").format(p.getCreatedAt());
+
+                    boolean isBest = (p.getLikes() >= 5 && p.getDislikes() <= 3);
+                %>
+
+                <div class="post-item">
+
+                    <div class="flex-grow-1">
+                        <a href="<%=ctx%>/post.jsp?id=<%=p.getId()%>" class="post-title"><%= title %></a>
+                        <% if (isBest) { %>
+                            <span class="badge-best">BEST</span>
+                        <% } %>
+
+                        <div class="post-meta">
+                            <%= p.getAuthor() %> · <%= dateStr %>
+                        </div>
+                    </div>
+
+                    <div class="post-actions">
+                        <button class="btn btn-sm btn-outline-primary btn-like" data-id="<%=p.getId()%>">
+                            👍 <span class="like-count"><%=p.getLikes()%></span>
+                        </button>
+
+                        <button class="btn btn-sm btn-outline-secondary btn-dislike" data-id="<%=p.getId()%>">
+                            👎 <span class="dislike-count"><%=p.getDislikes()%></span>
+                        </button>
+
+                        <% if (isReported) { %>
+                            <button class="btn btn-sm btn-danger" disabled>🚨</button>
+                        <% } else { %>
+                            <button class="btn btn-sm btn-outline-danger btn-report" data-id="<%=p.getId()%>">🚨</button>
+                        <% } %>
+                    </div>
+
+                </div>
+
+                <% } %>
+            <% } %>
+
+        </section>
+
     </div>
-  </main>
 
-<footer class="mt-auto py-4 bg-dark text-light">
-  <div class="container text-center">
+</main>
 
-      <div class="mb-1" style="font-size: 20px; font-weight: 700;">
-          ⚽ Ballpitto – Play Together, Enjoy More
-      </div>
+<!-- AJAX 기능 (수정 X) -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
 
-      <div class="small text-secondary">
-          📍 위치 기반 경기 매칭&nbsp;&nbsp;|&nbsp;&nbsp;
-          👥 파트너 찾기&nbsp;&nbsp;|&nbsp;&nbsp;
-          📝 리뷰 & 커뮤니티
-      </div>
+    function updateUI(container) {
+        return function(data) {
+            if (!data.ok) return;
+            container.querySelector(".like-count").textContent = data.likes;
+            container.querySelector(".dislike-count").textContent = data.dislikes;
+        }
+    }
 
-  </div>
-</footer>
+    document.querySelectorAll(".btn-like").forEach(btn=>{
+        btn.addEventListener("click", function(){
+            let id = this.dataset.id;
+            let card = this.closest(".post-item");
+            fetch("<%=ctx%>/post-like",{
+                method:"POST",
+                headers:{ "Content-Type":"application/x-www-form-urlencoded" },
+                body:"action=like&id="+id
+            })
+            .then(r=>r.json())
+            .then(updateUI(card));
+        });
+    });
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    document.querySelectorAll(".btn-dislike").forEach(btn=>{
+        btn.addEventListener("click", function(){
+            let id = this.dataset.id;
+            let card = this.closest(".post-item");
+            fetch("<%=ctx%>/post-like",{
+                method:"POST",
+                headers:{ "Content-Type":"application/x-www-form-urlencoded" },
+                body:"action=dislike&id="+id
+            })
+            .then(r=>r.json())
+            .then(updateUI(card));
+        });
+    });
+
+    document.querySelectorAll(".btn-report").forEach(btn=>{
+        btn.addEventListener("click", function(){
+            if(!confirm("이 게시물을 신고하시겠습니까?")) return;
+            let id = this.dataset.id;
+
+            fetch("<%=ctx%>/post-like",{
+                method:"POST",
+                headers:{ "Content-Type":"application/x-www-form-urlencoded" },
+                body:"action=report&id="+id
+            })
+            .then(r=>r.json())
+            .then(res=>{
+                if(res.ok){
+                    alert("신고가 접수되었습니다.");
+                    location.reload();
+                } else {
+                    alert("이미 신고한 게시글입니다.");
+                }
+            });
+        });
+    });
+
+});
+</script>
+
 </body>
 </html>

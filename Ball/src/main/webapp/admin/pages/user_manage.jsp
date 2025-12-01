@@ -59,7 +59,7 @@
         			<input type="hidden" name="id" value="<%= u.getId() %>">
 
         			<select name="role" class="form-select form-select-sm">
-            			<option value="student" <%= u.getRole().equals("student") ? "selected" : "" %>>student</option>
+            			<option value="student" <%= u.getRole().equals("student") ? "selected" : "" %>>users</option>
             			<option value="admin" <%= u.getRole().equals("admin") ? "selected" : "" %>>admin</option>
         			</select>
 

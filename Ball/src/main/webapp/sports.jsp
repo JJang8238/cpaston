@@ -9,16 +9,50 @@
 
     <style>
         :root { --border:#e5e5e5; }
-        body { background:#f8f9fa; }
-        .wrap { max-width:1080px; margin:24px auto; padding:0 16px; }
+
+        body {
+            background:#f5f7fa;
+        }
+
+        .page-wrap {
+            max-width:1200px;
+            margin:24px auto 40px;
+            padding:0 16px;
+        }
+
+        .page-header-wrap {
+            background:#ffffff;
+            border-radius:18px;
+            padding:20px 22px;
+            box-shadow:0 4px 16px rgba(15,23,42,0.06);
+            margin-bottom:18px;
+        }
+
+        .page-title {
+            font-size:24px;
+            font-weight:700;
+            margin-bottom:4px;
+        }
+
+        .page-subtitle {
+            font-size:14px;
+            color:#6b7280;
+        }
+
+        /* 지도 카드 */
+        .map-card {
+            background:#ffffff;
+            border-radius:18px;
+            box-shadow:0 4px 18px rgba(15,23,42,0.08);
+            padding:18px 18px 16px;
+        }
 
         #map {
             width:100%;
             height:520px;
             min-height:420px;
             background:#fff;
-            border:1px solid var(--border);
-            border-radius:12px;
+            border-radius:14px;
             overflow:hidden;
             position:relative;
         }
@@ -31,9 +65,37 @@
             justify-content:center;
             font-weight:600;
             color:#6c757d;
-            background:linear-gradient(180deg,#fff, #f8f9fa);
+            background:linear-gradient(180deg,#fff,#f8f9fa);
         }
 
+        /* 하단 목록 카드 */
+        .places-card {
+            margin-top:18px;
+            background:#ffffff;
+            border-radius:18px;
+            box-shadow:0 4px 16px rgba(15,23,42,0.06);
+            padding:16px 18px 14px;
+        }
+
+        .places-card h5 {
+            font-size:16px;
+            font-weight:600;
+            margin-bottom:10px;
+        }
+
+        #placesList .list-group-item {
+            border:none;
+            border-radius:10px;
+            margin-bottom:6px;
+            font-size:14px;
+            cursor:pointer;
+        }
+
+        #placesList .list-group-item:hover {
+            background:#eff6ff;
+        }
+
+        /* 리뷰 패널 (오른쪽 슬라이드) */
         #reviewPanel {
             position:fixed;
             top:0;
@@ -41,28 +103,46 @@
             width:380px;
             max-width:90vw;
             height:100vh;
-            background:#fff;
-            border-left:1px solid var(--border);
+            background:#ffffff;
+            border-left:none;
             z-index:1000;
-            padding:16px;
+            padding:20px 18px 18px;
             overflow-y:auto;
             display:none;
+            box-shadow:-6px 0 24px rgba(15,23,42,0.2);
+            border-radius:16px 0 0 16px;
         }
         #reviewPanel .close-btn {
             position:absolute;
-            top:12px;
-            right:12px;
+            top:16px;
+            right:16px;
+        }
+
+        #rvPlaceTitle {
+            font-size:17px;
+            font-weight:700;
         }
 
         .review-item {
             border-bottom:1px solid #eaeaea;
             padding:10px 0;
+            font-size:14px;
+        }
+
+        .review-item:last-child {
+            border-bottom:none;
+        }
+
+        .rv-section-title {
+            font-size:14px;
+            font-weight:600;
         }
     </style>
 </head>
 
 <body>
 
+<!-- 상단 네비는 기존 그대로 사용 -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container px-5">
         <a class="navbar-brand" href="<%=request.getContextPath()%>/main.jsp">볼피또</a>
@@ -80,35 +160,45 @@
     </div>
 </nav>
 
-<div class="wrap">
-    <h2 class="my-3">내 주변 풋살장</h2>
+<div class="page-wrap">
 
-    <div class="d-flex gap-2 mb-3">
-        <select id="selRadius" class="form-select form-select-sm" style="width:120px">
-            <option value="1000">반경 1km</option>
-            <option value="2000" selected>반경 2km</option>
-            <option value="3000">반경 3km</option>
-            <option value="5000">반경 5km</option>
-        </select>
-        <button id="btnRelocate" class="btn btn-sm btn-outline-primary">현재 위치로</button>
-        <button id="btnSearch" class="btn btn-sm btn-primary">이 위치에서 검색</button>
+    <!-- 상단 제목 카드 -->
+    <div class="page-header-wrap">
+        <h2 class="page-title mb-1">내 주변 풋살장</h2>
+        <p class="page-subtitle mb-0">현재 위치 기준으로 가까운 풋살장을 찾아보고, 리뷰와 경기 일정을 확인해 보세요.</p>
     </div>
 
-    <div id="map"><div class="loading">내 위치를 확인하는 중...</div></div>
+    <!-- 지도 + 반경 / 버튼 카드 -->
+    <div class="map-card mb-3">
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <select id="selRadius" class="form-select form-select-sm" style="width:140px">
+                <option value="1000">반경 1km</option>
+                <option value="2000" selected>반경 2km</option>
+                <option value="3000">반경 3km</option>
+                <option value="5000">반경 5km</option>
+            </select>
+            <button id="btnRelocate" class="btn btn-sm btn-outline-primary">현재 위치로</button>
+            <button id="btnSearch" class="btn btn-sm btn-primary">이 위치에서 검색</button>
+        </div>
 
-    <div id="placesListBox" class="mt-4">
-        <h5>📍 지도에 표시된 풋살장 목록</h5>
+        <div id="map"><div class="loading">내 위치를 확인하는 중...</div></div>
+    </div>
+
+    <!-- 하단 풋살장 목록 카드 -->
+    <div id="placesListBox" class="places-card">
+        <h5 class="mb-2">📍 지도에 표시된 풋살장 목록</h5>
         <ul id="placesList" class="list-group"></ul>
     </div>
 </div>
 
-<!-- 리뷰 패널 -->
+<!-- 오른쪽 리뷰 / 일정 패널 -->
 <aside id="reviewPanel">
     <button class="btn btn-sm btn-outline-secondary close-btn" onclick="hideReviewPanel()">닫기</button>
 
-    <h5 id="rvPlaceTitle" class="mb-2 mt-3"></h5>
+    <h5 id="rvPlaceTitle" class="mb-2 mt-4"></h5>
 
-    <div class="card mb-3">
+    <!-- 정보 / 리뷰 카드 -->
+    <div class="card mb-3 border-0 shadow-sm">
         <div class="card-body">
 
             <img id="rvPlaceImage"
@@ -118,7 +208,7 @@
 
             <div class="text-muted small mb-2">주변 이용자들이 남긴 리뷰를 확인해 보세요.</div>
 
-            <div class="mb-2">
+            <div class="mb-2 d-flex align-items-center">
                 <span style="font-size:20px; color:#FFC107;">★</span>
                 <span id="rvAvgRating" class="fw-bold ms-1">-</span>
                 <span class="text-muted small ms-1">(리뷰 <span id="rvReviewCount">0</span>개)</span>
@@ -126,7 +216,7 @@
 
             <hr>
 
-            <h6 class="fw-bold mb-2">리뷰 목록</h6>
+            <h6 class="rv-section-title mb-2">리뷰 목록</h6>
             <div id="rvReviewList">
                 <p class="text-muted mb-0">아직 리뷰가 없습니다.</p>
             </div>
@@ -134,8 +224,9 @@
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-header fw-bold">예정된 경기 일정</div>
+    <!-- 경기 일정 카드 -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header fw-bold bg-white border-bottom-0">예정된 경기 일정</div>
         <div class="card-body" id="rvMatches">
             <input type="date" id="matchDate" class="form-control form-control-sm mb-3">
             <p class="text-muted mb-0">예정된 경기가 없습니다.</p>
@@ -165,7 +256,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const today = new Date().toISOString().split("T")[0];
     document.getElementById("matchDate").value = today;
 
-    // 🔥 지도 로딩과 상관없이 버튼 이벤트를 먼저 바인딩
+    // 지도 로딩과 상관없이 버튼 이벤트를 먼저 바인딩
     document.getElementById("btnRelocate").addEventListener("click", relocateToMe);
     document.getElementById("btnSearch").addEventListener("click", searchFromCurrentMapCenter);
     document.getElementById("selRadius").addEventListener("change", () => {
@@ -288,12 +379,12 @@ function addPlace(place) {
     const lat = parseFloat(place.y);
     const lng = parseFloat(place.x);
 
- // 🔥 거리 계산
+    // 거리 계산
     const distKm = getDistance(userCenter.lat, userCenter.lng, lat, lng);
     const distText = distKm < 1
         ? Math.round(distKm * 1000) + "m"
         : distKm.toFixed(1) + "km";
-    
+
     const marker = new kakao.maps.Marker({
         position:new kakao.maps.LatLng(lat, lng),
         map:kakaoMap,
@@ -302,7 +393,7 @@ function addPlace(place) {
 
     markers.push(marker);
 
- // 🔥 리스트에 거리 포함
+    // 리스트에 거리 포함
     const li = document.createElement("li");
     li.className = "list-group-item list-group-item-action";
 
@@ -505,7 +596,7 @@ function cancelReserve(matchId) {
     });
 }
 
-// 🔥 현재 위치로 버튼용 (지도 준비 여부 체크 + 오류 상세)
+// 현재 위치로 버튼용
 function relocateToMe() {
     if (!navigator.geolocation) {
         alert("이 브라우저는 위치 기능을 지원하지 않습니다.");
@@ -521,7 +612,6 @@ function relocateToMe() {
                 drawUserSpot();
                 searchAround();
             } else {
-                // 지도 아직 안 만들어진 경우 → 중심만 저장해두고, 지도 생성 후 반영
                 console.log("지도 로딩 전 위치만 갱신:", userCenter);
             }
         },
@@ -539,14 +629,14 @@ function relocateToMe() {
                     alert("위치 요청 시간이 초과됐어요. 다시 눌러줘!");
                     break;
                 default:
-                    alert("위치를 가져올 수 없습니다.");
+                    alert("위를 가져올 수 없습니다.");
             }
         },
         GEO_OPTS
     );
 }
 
-// 🔥 “이 위치에서 검색” 버튼용
+// “이 위치에서 검색” 버튼용
 function searchFromCurrentMapCenter() {
     if (!kakaoMap) {
         alert("지도가 아직 로딩 중이야. 잠깐만 기다렸다가 다시 눌러줘!");
@@ -562,7 +652,7 @@ function hideReviewPanel(){
     document.getElementById("reviewPanel").style.display = "none";
 }
 
-//거리 계산 함수
+// 거리 계산 함수
 function getDistance(lat1, lon1, lat2, lon2) {
     function toRad(value) {
         return value * Math.PI / 180;
@@ -577,11 +667,10 @@ function getDistance(lat1, lon1, lat2, lon2) {
         Math.sin(dLon/2) * Math.sin(dLon/2);
 
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const d = R * c; // km 단위
+    const d = R * c;  // km
 
-    return d;  // km
+    return d;
 }
-
 </script>
 
 <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=f802c143efc8e04c44d5cbc892fe3198&libraries=services&autoload=false"></script>

@@ -31,7 +31,6 @@
     /* --------------------------- 내가 쓴 게시글 --------------------------- */
     List<Post> myPosts = new ArrayList<>();
     try (PostDAO dao = new PostDAO()) {
-        // ★ username이 null인 경우가 있으므로 이름으로 검색해야 오류가 안남
         myPosts = dao.listByAuthor(fUsername);
     } catch (Exception e) { e.printStackTrace(); }
 
@@ -44,7 +43,6 @@
 
     int totalReviewCount = myPlaceReviews.size() + myMatchReviews.size();
 
-    // 5개까지만 보여줄 리스트
     List<Map<String,Object>> placeLimit = (myPlaceReviews.size() > 5)
         ? myPlaceReviews.subList(0, 5)
         : myPlaceReviews;
@@ -63,23 +61,43 @@
 <head>
     <meta charset="UTF-8" />
     <title>마이페이지</title>
-    <link rel="icon" href="<%=ctx%>/assets/favicon.ico" />
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <style>
+        body {
+            background-color: #f5f7fa;
+        }
+        .profile-card {
+            border: none;
+            border-radius: 18px;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.07);
+        }
+        .section-card {
+            border-radius: 14px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+            border: none;
+        }
         .limit-box {
-            max-height: 520px;
+            max-height: 500px;
             overflow: hidden;
+        }
+        .title-line {
+            border-left: 4px solid #0d6efd;
+            padding-left: 10px;
+            font-weight: bold;
+            font-size: 18px;
         }
     </style>
 </head>
 
-<body class="d-flex min-vh-100 flex-column">
+<body class="d-flex flex-column min-vh-100">
 
 <!-- --------------------------- 네비 --------------------------- -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-  <div class="container px-5">
-    <a class="navbar-brand" href="<%=ctx%>/main.jsp">볼피또</a>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+  <div class="container px-4">
+    <a class="navbar-brand fw-bold" href="<%=ctx%>/main.jsp">볼피또</a>
+
     <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -88,7 +106,7 @@
       <ul class="navbar-nav ms-auto">
         <li class="nav-item"><span class="nav-link disabled"><%=displayName%>님</span></li>
         <li class="nav-item"><a class="nav-link" href="<%=ctx%>/main.jsp">홈</a></li>
-        <li class="nav-item"><a class="nav-link active" href="<%=ctx%>/mypage.jsp">마이페이지</a></li>
+        <li class="nav-item"><a class="nav-link active fw-bold" href="<%=ctx%>/mypage.jsp">마이페이지</a></li>
         <li class="nav-item"><a class="nav-link" href="<%=ctx%>/logout.jsp">로그아웃</a></li>
       </ul>
     </div>
@@ -96,69 +114,66 @@
 </nav>
 
 
+<!-- --------------------------- 메인 --------------------------- -->
 <main class="flex-grow-1">
-<div class="container py-5 px-4 px-lg-5">
+<div class="container py-5">
 
-    <h1 class="fw-bold mb-4">마이페이지</h1>
+    <h2 class="fw-bold mb-4">마이페이지</h2>
 
     <div class="row g-4">
 
         <!-- -------------------- 프로필 카드 -------------------- -->
-        <div class="col-md-4">
-            <div class="card shadow-sm text-center">
-                <div class="card-body">
-                    <img src="<%=fProfile%>" class="rounded-circle mb-3"
-                         style="width:140px;height:140px;object-fit:cover;">
-                    <h4 class="fw-bold"><%=fName%></h4>
-                    <p class="text-muted mb-0"><small>역할(Role): <%=fRole%></small></p>
-                </div>
+        <div class="col-lg-4">
+            <div class="card profile-card text-center p-4">
+                <img src="<%=fProfile%>" class="rounded-circle mx-auto mb-3"
+                     style="width:150px;height:150px;object-fit:cover;border:4px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,0.15);">
+
+                <h4 class="fw-bold mb-0"><%=fName%></h4>
+                <p class="text-muted mb-3"><small>역할(Role): <%=fRole%></small></p>
+
+                <a href="<%=ctx%>/editProfile.jsp"
+                   class="btn btn-primary w-100 fw-semibold">
+                   프로필 수정
+                </a>
             </div>
         </div>
 
         <!-- -------------------- 계정 정보 카드 -------------------- -->
-        <div class="col-md-8">
-            <div class="card shadow-sm">
-              <div class="card-body">
-                <h5 class="mb-3">계정 정보</h5>
+        <div class="col-lg-8">
+            <div class="card profile-card p-4">
+                <h5 class="title-line mb-3">계정 정보</h5>
 
-                <div class="mb-2">
-                  <span class="text-muted">아이디</span>
-                  <div class="fw-semibold"><%=fUsername%></div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted">아이디</div>
+                    <div class="col-sm-8 fw-semibold"><%=fUsername%></div>
                 </div>
 
-                <div class="mb-2">
-                  <span class="text-muted">이름</span>
-                  <div class="fw-semibold"><%=fName%></div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted">이름</div>
+                    <div class="col-sm-8 fw-semibold"><%=fName%></div>
                 </div>
 
-                <div class="mb-2">
-                  <span class="text-muted">이메일</span>
-                  <div class="fw-semibold"><%=fEmail%></div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted">이메일</div>
+                    <div class="col-sm-8 fw-semibold"><%=fEmail%></div>
                 </div>
 
-                <div class="d-flex gap-2 mt-4">
-                  <a href="<%=ctx%>/editProfile.jsp" class="btn btn-primary">프로필 수정</a>
-                  <a href="<%=ctx%>/main.jsp" class="btn btn-outline-secondary">홈으로</a>
-                  <a href="<%=ctx%>/logout.jsp" class="btn btn-outline-danger ms-auto">로그아웃</a>
+                <div class="d-flex justify-content-end gap-2 mt-3">
+                    <a href="<%=ctx%>/main.jsp" class="btn btn-outline-secondary">홈으로</a>
+                    <a href="<%=ctx%>/logout.jsp" class="btn btn-outline-danger">로그아웃</a>
                 </div>
-              </div>
             </div>
         </div>
 
     </div>
 
-
-    <!-- --------------------------- 내가 작성한 리뷰 --------------------------- -->
-    <div class="card shadow-sm mt-5">
-        <div class="card-header bg-light">
-            <b>⭐ 내가 작성한 리뷰 (<%= totalReviewCount %>)</b>
-        </div>
-
-        <div class="card-body">
+    <!-- --------------------------- 내가 쓴 리뷰 --------------------------- -->
+    <div class="card section-card mt-5 p-4">
+        <h5 class="title-line mb-3">⭐ 내가 작성한 리뷰 (<%= totalReviewCount %>)</h5>
 
         <% if (totalReviewCount == 0) { %>
 
-            <p class="text-muted mb-0">작성한 리뷰가 없습니다.</p>
+            <p class="text-muted">작성한 리뷰가 없습니다.</p>
 
         <% } else { %>
 
@@ -172,87 +187,35 @@
                     <ul class="list-group mb-3">
                     <% for (int i = 0; i < placeLimit.size(); i++) {
                            Map<String,Object> r = placeLimit.get(i); %>
-                        <li class="list-group-item">
-                            <div class="d-flex justify-content-between">
-                                <div>
-                                    <strong><%= r.get("place_name") %></strong><br>
 
-                                    <span style="color:#FFC107;">
-                                        <%
-                                            Object ratingObj = r.get("rating");
-                                            int rating = (ratingObj != null)
-                                                    ? Integer.parseInt(String.valueOf(ratingObj))
-                                                    : 0;
-                                            for (int s = 0; s < rating; s++) {
-                                                out.print("★");
-                                            }
-                                        %>
-                                    </span>
-                                    <span class="text-muted small">(<%=r.get("rating")%>)</span><br>
+                        <li class="list-group-item border-0 border-bottom py-3">
 
-                                    <small class="text-muted"><%=r.get("created_at")%></small><br>
-                                    <span><%=r.get("content")%></span>
-                                </div>
+                            <strong class="d-block"><%= r.get("place_name") %></strong>
 
-                                <div class="text-end">
-                                    <a href="<%=ctx%>/sports.jsp?place=<%=r.get("place_name")%>"
-                                       class="btn btn-sm btn-outline-primary mt-2">
-                                        보기
-                                    </a>
-                                </div>
-                            </div>
+                            <span class="text-warning">
+                                <%
+                                    Object ratingObj = r.get("rating");
+                                    int rating = (ratingObj != null)
+                                            ? Integer.parseInt(String.valueOf(ratingObj))
+                                            : 0;
+                                    for (int s = 0; s < rating; s++) out.print("★");
+                                %>
+                            </span>
+                            <span class="text-muted small">(<%=r.get("rating")%>)</span>
+
+                            <div class="text-muted small"><%=r.get("created_at")%></div>
+                            <div><%=r.get("content")%></div>
+
                         </li>
+
                     <% } %>
                     </ul>
-
-                    <% if (myPlaceReviews.size() > 5) { %>
-                        <ul class="list-group mb-3 d-none" id="placeReviewHidden">
-                        <% for (int i = 5; i < myPlaceReviews.size(); i++) {
-                               Map<String,Object> r = myPlaceReviews.get(i); %>
-                            <li class="list-group-item">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <strong><%= r.get("place_name") %></strong><br>
-
-                                        <span style="color:#FFC107;">
-                                            <%
-                                                Object ratingObj = r.get("rating");
-                                                int rating = (ratingObj != null)
-                                                        ? Integer.parseInt(String.valueOf(ratingObj))
-                                                        : 0;
-                                                for (int s = 0; s < rating; s++) {
-                                                    out.print("★");
-                                                }
-                                            %>
-                                        </span>
-                                        <span class="text-muted small">(<%=r.get("rating")%>)</span><br>
-
-                                        <small class="text-muted"><%=r.get("created_at")%></small><br>
-                                        <span><%=r.get("content")%></span>
-                                    </div>
-
-                                    <div class="text-end">
-                                        <a href="<%=ctx%>/sports.jsp?place=<%=r.get("place_name")%>"
-                                           class="btn btn-sm btn-outline-primary mt-2">
-                                            보기
-                                        </a>
-                                    </div>
-                                </div>
-                            </li>
-                        <% } %>
-                        </ul>
-                    <% } %>
-
                 </div>
 
                 <% if (myPlaceReviews.size() > 5) { %>
-                    <button id="placeMoreBtn"
-                            class="btn btn-sm btn-outline-primary">
-                        더보기
-                    </button>
+                    <button id="placeMoreBtn" class="btn btn-sm btn-outline-primary">더보기</button>
                 <% } %>
             <% } %>
-
 
             <!-- 경기 리뷰 -->
             <% if (!myMatchReviews.isEmpty()) { %>
@@ -264,100 +227,43 @@
                     <ul class="list-group mb-3">
                     <% for (int i = 0; i < matchLimit.size(); i++) {
                            Map<String,Object> r = matchLimit.get(i); %>
-                        <li class="list-group-item">
-                            <div class="d-flex justify-content-between">
-                                <div>
-                                    <strong>경기 ID: <%=r.get("match_id")%></strong><br>
 
-                                    <span style="color:#FFC107;">
-                                        <%
-                                            Object ratingObj = r.get("rating");
-                                            int rating = (ratingObj != null)
-                                                    ? Integer.parseInt(String.valueOf(ratingObj))
-                                                    : 0;
-                                            for (int s = 0; s < rating; s++) {
-                                                out.print("★");
-                                            }
-                                        %>
-                                    </span>
-                                    <span class="text-muted small">(<%=r.get("rating")%>)</span><br>
+                        <li class="list-group-item border-0 border-bottom py-3">
 
-                                    <small class="text-muted"><%=r.get("created_at")%></small><br>
-                                    <span><%=r.get("content")%></span>
-                                </div>
+                            <strong class="d-block">경기 ID: <%=r.get("match_id")%></strong>
 
-                                <div class="text-end">
-                                    <a href="<%=ctx%>/sports.jsp"
-                                       class="btn btn-sm btn-outline-primary mt-2">
-                                        보기
-                                    </a>
-                                </div>
-                            </div>
+                            <span class="text-warning">
+                                <%
+                                    Object ratingObj = r.get("rating");
+                                    int rating = (ratingObj != null)
+                                            ? Integer.parseInt(String.valueOf(ratingObj))
+                                            : 0;
+                                    for (int s = 0; s < rating; s++) out.print("★");
+                                %>
+                            </span>
+                            <span class="text-muted small">(<%=r.get("rating")%>)</span>
+
+                            <div class="text-muted small"><%=r.get("created_at")%></div>
+                            <div><%=r.get("content")%></div>
+
                         </li>
+
                     <% } %>
                     </ul>
-
-                    <% if (myMatchReviews.size() > 5) { %>
-                        <ul class="list-group mb-3 d-none" id="matchReviewHidden">
-                        <% for (int i = 5; i < myMatchReviews.size(); i++) {
-                               Map<String,Object> r = myMatchReviews.get(i); %>
-                            <li class="list-group-item">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <strong>경기 ID: <%=r.get("match_id")%></strong><br>
-
-                                        <span style="color:#FFC107;">
-                                            <%
-                                                Object ratingObj = r.get("rating");
-                                                int rating = (ratingObj != null)
-                                                        ? Integer.parseInt(String.valueOf(ratingObj))
-                                                        : 0;
-                                                for (int s = 0; s < rating; s++) {
-                                                    out.print("★");
-                                                }
-                                            %>
-                                        </span>
-                                        <span class="text-muted small">(<%=r.get("rating")%>)</span><br>
-
-                                        <small class="text-muted"><%=r.get("created_at")%></small><br>
-                                        <span><%=r.get("content")%></span>
-                                    </div>
-
-                                    <div class="text-end">
-                                        <a href="<%=ctx%>/sports.jsp"
-                                           class="btn btn-sm btn-outline-primary mt-2">
-                                            보기
-                                        </a>
-                                    </div>
-                                </div>
-                            </li>
-                        <% } %>
-                        </ul>
-                    <% } %>
-
                 </div>
 
                 <% if (myMatchReviews.size() > 5) { %>
-                    <button id="matchMoreBtn"
-                            class="btn btn-sm btn-outline-primary">
-                        더보기
-                    </button>
+                    <button id="matchMoreBtn" class="btn btn-sm btn-outline-primary">더보기</button>
                 <% } %>
             <% } %>
 
         <% } %>
-
-        </div>
     </div>
 
 
-    <!-- --------------------------- 내가 예약한 경기 목록 --------------------------- -->
-    <div class="card shadow-sm mt-5">
-        <div class="card-header bg-light">
-            <b>📅 내가 예약한 경기 (<%= myReservedMatches.size() %>)</b>
-        </div>
-
-        <div class="card-body">
+    <!-- --------------------------- 내가 예약한 경기 --------------------------- -->
+    <div class="card section-card mt-5 p-4">
+        <h5 class="title-line mb-3">📅 내가 예약한 경기 (<%= myReservedMatches.size() %>)</h5>
 
         <% if (myReservedMatches.isEmpty()) { %>
 
@@ -365,8 +271,9 @@
 
         <% } else { %>
 
+            <div class="table-responsive">
             <table class="table table-bordered bg-white mt-2">
-                <thead class="table-dark">
+                <thead class="table-light">
                     <tr>
                         <th>날짜</th>
                         <th>시간</th>
@@ -393,6 +300,7 @@
                                   onsubmit="return confirm('정말 예약을 취소하시겠습니까?');">
                                 <input type="hidden" name="action" value="cancel">
                                 <input type="hidden" name="matchId" value="<%=m.getId()%>">
+
                                 <button type="submit" class="btn btn-sm btn-outline-danger">
                                     취소
                                 </button>
@@ -404,20 +312,15 @@
                 </tbody>
 
             </table>
+            </div>
 
         <% } %>
-
-        </div>
     </div>
 
 
     <!-- --------------------------- 내가 쓴 게시글 --------------------------- -->
-    <div class="card shadow-sm mt-5 mb-5">
-        <div class="card-header bg-light">
-            <b>📄 내가 작성한 게시글 (<%= myPosts.size() %>)</b>
-        </div>
-
-        <div class="card-body">
+    <div class="card section-card mt-5 mb-5 p-4">
+        <h5 class="title-line mb-3">📄 내가 작성한 게시글 (<%= myPosts.size() %>)</h5>
 
         <% if (myPosts.isEmpty()) { %>
 
@@ -429,7 +332,7 @@
 
             <% for (Post p : myPosts) { %>
 
-                <li class="list-group-item">
+                <li class="list-group-item border-0 border-bottom py-3">
 
                     <div class="d-flex justify-content-between align-items-center">
 
@@ -445,7 +348,7 @@
                             </small>
 
                             <a href="<%=ctx%>/edit.jsp?id=<%=p.getId()%>&from=mypage"
-                               class="btn btn-sm btn-outline-primary">
+                               class="btn btn-sm btn-outline-primary me-1">
                                수정
                             </a>
 
@@ -471,18 +374,18 @@
 
         <% } %>
 
-        </div>
     </div>
 
 </div>
 </main>
 
-
+<!-- --------------------------- 푸터 --------------------------- -->
 <footer class="mt-auto py-4 bg-dark text-light">
   <div class="container text-center">
     <small>Copyright &copy; 볼피또 2025</small>
   </div>
 </footer>
+
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 

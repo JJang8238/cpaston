@@ -8,7 +8,7 @@ CREATE TABLE `user` (
   username       VARCHAR(50)  NOT NULL UNIQUE,
   password       VARCHAR(100) NOT NULL,
   name           VARCHAR(100) NOT NULL,
-  role           VARCHAR(20)  NOT NULL DEFAULT 'student',
+  role           VARCHAR(20)  NOT NULL DEFAULT 'users',
   email          VARCHAR(255) UNIQUE,
   email_verified TINYINT(1)   NOT NULL DEFAULT 0,
   profile_image  VARCHAR(255)
@@ -190,24 +190,9 @@ VALUES
 ('2025-12-10', '20:00:00', '양주시유소년축구클럽', 0, 18, '예약중'),
 ('2025-12-10', '22:00:00', '양주시유소년축구클럽', 2, 18, '예약중');
 
-DESC board;
+UPDATE user 
+SET role = 'user'
+WHERE role = 'student';
 
-DESC post_vote_log;
-
-UPDATE match_reservations
-SET match_status='예약중'
-WHERE match_status IS NULL OR match_status='';
-
-SELECT id, match_status 
-FROM match_reservations 
-WHERE id = 72;
-
-SELECT * FROM reservations;
-
-SELECT * FROM user;
-
-SHOW CREATE TABLE reservations;
-
-SHOW CREATE TABLE reservations;
-
-DESC match_reservations;
+ALTER TABLE user 
+MODIFY role VARCHAR(20) NOT NULL DEFAULT 'user';

@@ -1,37 +1,23 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="true" %>
 <%@ page import="dto.User" %>
+
 <%
-    // 컨텍스트 루트 (다른 JSP에서 ctx를 쓰는 경우가 있어 충돌 피하려고 ctxPath 사용)
     String ctxPath = request.getContextPath();
 
-    // 세션 속성
-    Object loginUser = session.getAttribute("loginUser"); // DTO(User)일 가능성
-    Object userIdObj = session.getAttribute("userId");    // 숫자/문자 가능
-    String username  = (String) session.getAttribute("username");
-    String name      = (String) session.getAttribute("name");
+    // 로그인 객체 (이것만 쓰면 충분)
+    User loginUser = (User) session.getAttribute("loginUser");
 
-    // 로그인 여부
-    boolean loggedIn = (loginUser != null) || (userIdObj != null) || (username != null) || (name != null);
+    boolean loggedIn = (loginUser != null);
 
-    // 표시 이름 결정
-    String displayName = null;
-    if (name != null && !name.isEmpty()) {
-        displayName = name;
-    } else if (username != null && !username.isEmpty()) {
-        displayName = username;
-    } else if (loginUser != null) {
-        try {
-            java.lang.reflect.Method m = null;
-            try { m = loginUser.getClass().getMethod("getName"); } catch (Exception ignore) {}
-            if (m == null) { try { m = loginUser.getClass().getMethod("getUsername"); } catch (Exception ignore) {} }
-            if (m != null) {
-                Object v = m.invoke(loginUser);
-                if (v != null && !v.toString().isEmpty()) displayName = v.toString();
-            }
-        } catch (Exception ignore) {}
+    // 표시용 이름
+    String displayName = "회원";
+    if (loggedIn) {
+        if (loginUser.getName() != null && !loginUser.getName().isEmpty()) {
+            displayName = loginUser.getName();
+        } else if (loginUser.getUsername() != null) {
+            displayName = loginUser.getUsername();
+        }
     }
-
-    if (displayName == null) displayName = "회원";
 %>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
@@ -40,20 +26,20 @@
   <div class="container">
     <a class="navbar-brand fw-bold" href="<%=ctxPath%>/main.jsp">볼삐또</a>
 
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNav"
-            aria-controls="topNav" aria-expanded="false" aria-label="Toggle navigation">
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNav">
       <span class="navbar-toggler-icon"></span>
     </button>
 
     <div class="collapse navbar-collapse justify-content-end" id="topNav">
       <ul class="navbar-nav align-items-lg-center gap-lg-3">
         <% if (loggedIn) { %>
-          <li class="nav-item"><span class="navbar-text text-secondary me-lg-2"><%=displayName%>님 환영합니다</span></li>
+          <li class="nav-item">
+            <span class="navbar-text text-secondary me-lg-2"><%=displayName%>님 환영합니다</span>
+          </li>
           <li class="nav-item"><a class="nav-link" href="<%=ctxPath%>/main.jsp">홈</a></li>
           <li class="nav-item"><a class="nav-link" href="<%=ctxPath%>/mypage.jsp">마이페이지</a></li>
           <li class="nav-item"><a class="nav-link" href="<%=ctxPath%>/logout.jsp">로그아웃</a></li>
         <% } else { %>
-          <li class="nav-item"><a class="nav-link" href="<%=ctxPath%>/main.jsp">Home</a></li>
           <li class="nav-item"><a class="nav-link" href="<%=ctxPath%>/login.jsp">로그인</a></li>
           <li class="nav-item"><a class="nav-link" href="<%=ctxPath%>/register.jsp">회원가입</a></li>
 
@@ -62,3 +48,5 @@
     </div>
   </div>
 </nav>
+
+<main class="container mt-4">

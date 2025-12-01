@@ -50,4 +50,3 @@ public class NoticeWriteServlet extends HttpServlet {
         resp.sendRedirect(req.getContextPath() + "/notice-write.jsp");
     }
 }
-

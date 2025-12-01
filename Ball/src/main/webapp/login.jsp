@@ -144,14 +144,10 @@
                 const pw = document.getElementById("password");
                 const btn = event.target;
 
-                if (pw.type === "password") {
-                    pw.type = "text";
-                    btn.innerText = "숨기기";
-                } else {
-                    pw.type = "password";
-                    btn.innerText = "보기";
-                }
-            }
-        </script>
+            <!-- 아이디/비밀번호 찾기 -->
+            <div class="helper-links">
+                <a href="find_id.jsp">아이디 찾기</a> |
+                <a href="find_pw.jsp">비밀번호 찾기</a>
+            </div>
 
         <%@ include file="include/footer.jsp" %>

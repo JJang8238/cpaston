@@ -145,7 +145,6 @@ body {
 
         <% } else if ("review".equals(pageParam)) { %>
 
-            <!-- 리뷰 관리 -->
             <jsp:include page="pages/review_manage.jsp" />
 
         <% } else if ("report".equals(pageParam)) { %>

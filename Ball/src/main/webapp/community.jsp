@@ -7,6 +7,7 @@
 <%@ page import="dto.Post" %>
 <%@ page import="dto.Notice" %>
 <%@ page import="dto.Board" %>
+
 <%
     request.setCharacterEncoding("UTF-8");
     String ctx = request.getContextPath();
@@ -25,8 +26,11 @@
 
     List<Post> posts = new ArrayList<>();
     try (PostDAO dao = new PostDAO()) {
-        if (categoryId == 1) posts = dao.listAll();
-        else posts = dao.listByBoardId(categoryId);
+        if (categoryId == 1) {
+            posts = dao.listAll();
+        } else {
+            posts = dao.listByBoardId(categoryId);
+        }
     }
 
     Notice notice = null;
@@ -177,8 +181,9 @@
     <!-- 공지 -->
     <div class="mb-4">
       <% if (notice != null) { %>
-        <div class="notice-card shadow-sm">
-            <h5 class="fw-bold mb-1">📢 공지사항</h5>
+        <div class="card notice-card shadow-sm" onclick="openNoticeModal(<%=notice.getId()%>)">
+          <div class="card-body">
+            <h5 class="fw-bold text-dark mb-1">📢 공지사항</h5>
             <p class="mb-0"><%= notice.getTitle() %></p>
         </div>
       <% } else { %>
@@ -186,24 +191,100 @@
       <% } %>
     </div>
 
+    <!-- 관리자 공지 작성 -->
+    <% if (loginUser != null && "admin".equals(loginUser.getRole())) { %>
+        <div class="mb-4 text-end">
+            <a href="<%=ctx%>/admin/admin_notice.jsp" class="btn btn-sm btn-warning">공지 작성</a>
+        </div>
+    <% } %>
+
     <div class="row">
 
-        <!-- 왼쪽 카테고리 -->
-        <aside class="col-md-3 mb-4">
-            <div class="category-box shadow-sm">
+    <!-- 카테고리 -->
+    <aside class="col-md-3 mb-5">
+      <div class="list-group shadow-sm">
+        <a href="<%=ctx%>/community.jsp?category=1"
+           class="list-group-item list-group-item-action <%= (categoryId==1?"active":"") %>">전체</a>
 
-                <a href="<%=ctx%>/community.jsp?category=1"
-                    class="list-group-item list-group-item-action <%= (categoryId==1?"active":"") %>">
-                    전체
+        <% for (Board b : boards) {
+             if (b.getName().equals("전체")) continue;
+        %>
+          <a href="<%=ctx%>/community.jsp?category=<%=b.getId()%>"
+             class="list-group-item list-group-item-action <%= (b.getId()==categoryId?"active":"") %>">
+             <%= b.getName() %>
+          </a>
+        <% } %>
+      </div>
+
+      <div class="d-grid mt-3">
+        <a href="<%=ctx%>/write.jsp?board_id=<%=categoryId%>" class="btn btn-primary">글쓰기</a>
+      </div>
+    </aside>
+
+    <!-- 게시글 목록 -->
+    <section class="col-md-9 mb-5">
+
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <h4 class="fw-bold mb-0"><%= categoryName %> 게시글</h4>
+        <span class="badge bg-secondary">총 <%= posts.size() %>건</span>
+      </div>
+
+      <% if (posts.isEmpty()) { %>
+
+        <div class="alert alert-info">해당 카테고리에 게시글이 없습니다.</div>
+
+      <% } else { %>
+
+      <div class="row row-cols-1 g-3">
+
+      <% for (Post p : posts) {
+
+            boolean isReported = false;
+            if (loginUser != null) {
+                try (PostDAO dao = new PostDAO()) {
+                    isReported = dao.didUserReport(p.getId(), loginUser.getId());
+                }
+            }
+
+            String title = (p.getTitle()==null?"":p.getTitle())
+                .replace("&","&amp;").replace("<","&lt;")
+                .replace(">","&gt;").replace("\"","&quot;").replace("'","&#39;");
+
+            String dateStr = (p.getCreatedAt()==null) ? "" :
+              new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm").format(p.getCreatedAt());
+
+            boolean isBest = (p.getLikes() >= 5 && p.getDislikes() <= 3);
+      %>
+
+        <div class="col">
+          <div class="card h-100 shadow-sm">
+            <div class="card-body">
+
+              <h5 class="card-title d-flex align-items-center gap-2">
+                <a href="<%=ctx%>/post.jsp?id=<%=p.getId()%>" class="text-dark text-decoration-none">
+                  <%= title %>
                 </a>
 
-                <% for (Board b : boards) {
-                     if ("전체".equals(b.getName())) continue;
-                %>
-                    <a href="<%=ctx%>/community.jsp?category=<%=b.getId()%>"
-                       class="list-group-item list-group-item-action <%= (b.getId()==categoryId ? "active" : "") %>">
-                       <%= b.getName() %>
-                    </a>
+                <span class="badge best-badge" style="<%= isBest ? "" : "display:none;" %>">BEST</span>
+              </h5>
+
+              <p class="text-muted small mb-2"><%= p.getAuthor() %> · <%= dateStr %></p>
+
+              <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                  <button class="btn btn-sm btn-outline-primary btn-like" data-id="<%=p.getId()%>">
+                    👍 <span class="like-count"><%=p.getLikes()%></span>
+                  </button>
+
+                  <button class="btn btn-sm btn-outline-secondary btn-dislike" data-id="<%=p.getId()%>">
+                    👎 <span class="dislike-count"><%=p.getDislikes()%></span>
+                  </button>
+                </div>
+
+                <% if (isReported) { %>
+                    <button class="btn btn-sm btn-danger" disabled>🚨 신고됨(나)</button>
+                <% } else { %>
+                    <button class="btn btn-sm btn-outline-danger btn-report" data-id="<%=p.getId()%>">🚨 신고</button>
                 <% } %>
 
             </div>
@@ -285,17 +366,41 @@
 
 </main>
 
-<!-- AJAX 기능 (수정 X) -->
+<!-- ⭐⭐ 공지 상세보기 모달 추가 ⭐⭐ -->
+<div class="modal fade" id="noticeModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">공지사항</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="noticeBody">불러오는 중...</div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- ❤️ 좋아요/싫어요/신고 + 공지 팝업 JS -->
 <script>
+function openNoticeModal(id) {
+    fetch("<%=ctx%>/notice?id=" + id)
+        .then(res => res.text())
+        .then(html => {
+            document.getElementById("noticeBody").innerHTML = html;
+            new bootstrap.Modal(document.getElementById("noticeModal")).show();
+        });
+}
+
 document.addEventListener("DOMContentLoaded", function() {
 
-    function updateUI(container) {
-        return function(data) {
-            if (!data.ok) return;
-            container.querySelector(".like-count").textContent = data.likes;
-            container.querySelector(".dislike-count").textContent = data.dislikes;
-        }
-    }
+    document.querySelectorAll(".btn-like").forEach(btn => {
+        btn.addEventListener("click", function() {
+            let postId = this.dataset.id;
+            let container = this.closest(".card-body");
 
     document.querySelectorAll(".btn-like").forEach(btn=>{
         btn.addEventListener("click", function(){
@@ -306,38 +411,37 @@ document.addEventListener("DOMContentLoaded", function() {
                 headers:{ "Content-Type":"application/x-www-form-urlencoded" },
                 body:"action=like&id="+id
             })
-            .then(r=>r.json())
-            .then(updateUI(card));
+            .then(res => res.json())
+            .then(data => updateUI(container)(data));
         });
     });
 
-    document.querySelectorAll(".btn-dislike").forEach(btn=>{
-        btn.addEventListener("click", function(){
-            let id = this.dataset.id;
-            let card = this.closest(".post-item");
-            fetch("<%=ctx%>/post-like",{
-                method:"POST",
-                headers:{ "Content-Type":"application/x-www-form-urlencoded" },
-                body:"action=dislike&id="+id
+    document.querySelectorAll(".btn-dislike").forEach(btn => {
+        btn.addEventListener("click", function() {
+            let postId = this.dataset.id;
+            let container = this.closest(".card-body");
+
+            fetch("<%=ctx%>/post-like", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: "action=dislike&id=" + postId
             })
-            .then(r=>r.json())
-            .then(updateUI(card));
+            .then(res => res.json())
+            .then(data => updateUI(container)(data));
         });
     });
 
-    document.querySelectorAll(".btn-report").forEach(btn=>{
-        btn.addEventListener("click", function(){
-            if(!confirm("이 게시물을 신고하시겠습니까?")) return;
-            let id = this.dataset.id;
+    document.querySelectorAll(".btn-report").forEach(btn => {
+        btn.addEventListener("click", function() {
 
             fetch("<%=ctx%>/post-like",{
                 method:"POST",
                 headers:{ "Content-Type":"application/x-www-form-urlencoded" },
                 body:"action=report&id="+id
             })
-            .then(r=>r.json())
-            .then(res=>{
-                if(res.ok){
+            .then(res => res.json())
+            .then(res => {
+                if (res.ok) {
                     alert("신고가 접수되었습니다.");
                     location.reload();
                 } else {
@@ -356,11 +460,11 @@ document.addEventListener("DOMContentLoaded", function() {
 
             const bestBadge = container.querySelector(".best-badge");
             if (bestBadge) {
-                bestBadge.style.display = (data.likes >= 5 && data.dislikes <= 3) ? "inline-block" : "none";
+                bestBadge.style.display =
+                    (data.likes >= 5 && data.dislikes <= 3) ? "inline-block" : "none";
             }
         }
     }
-
 });
 </script>
 

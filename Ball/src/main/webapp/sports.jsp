@@ -442,13 +442,21 @@ function openReviewPanel(place) {
     document.getElementById("rvPlaceTitle").textContent = placeName;
     document.getElementById("reviewPanel").style.display = "block";
 
-    const safeName = placeName.replace(/\s+/g, "");
     const img = document.getElementById("rvPlaceImage");
-    img.src = "<%=request.getContextPath()%>/assets/img/" + safeName + ".png";
 
-    img.onerror = function () {
-        this.src = "<%=request.getContextPath()%>/assets/img/field-default.png";
+    // 영어 파일명 매핑 (EB 환경에서만 정상 동작)
+    const imageMap = {
+        "공존풋살파크 양주점": "gongzon.png",
+        "고덕생활체육공원 풋살장": "field-default.png",
+        "양주시유소년축구클럽": "yangjuclub.png",
+        "99풋살파크": "nine9.png",
+        "탄탄축구실내풋살장": "tantan.png"
     };
+
+    // 매핑된 파일명 사용
+    const file = imageMap[placeName] || "field-default.png";
+
+    img.src = "<%=request.getContextPath()%>/assets/img/" + file + "?v=" + Date.now();
 
     loadReviews(placeName);
     loadMatches(placeName);

@@ -15,7 +15,7 @@
         }
 
         .page-wrap {
-            max-width:1200px;
+            max-width:1000px;
             margin:24px auto 40px;
             padding:0 16px;
         }
@@ -49,8 +49,8 @@
 
         #map {
             width:100%;
-            height:520px;
-            min-height:420px;
+            height:400px;
+            min-height:350px;
             background:#fff;
             border-radius:14px;
             overflow:hidden;
@@ -137,6 +137,31 @@
             font-size:14px;
             font-weight:600;
         }
+        
+        .match-card {
+		    border:1px solid #e5e7eb;
+		    border-radius:14px;
+		    padding:12px 14px;
+		    margin-bottom:10px;
+		    background:#fafafa;
+		    transition:0.15s ease;
+		}
+		
+		.match-card:hover {
+		    background:#f3f4f6;
+		}
+		
+		.match-time {
+		    font-size:15px;
+		    font-weight:700;
+		    color:#111827;
+		}
+		
+		.match-info {
+		    font-size:13px;
+		    color:#6b7280;
+		}
+        
     </style>
 </head>
 
@@ -525,11 +550,17 @@ function loadMatches(placeName) {
                     btn = "<button class='btn btn-sm btn-primary ms-2' onclick='reserveMatch(" + m.id + ")'>예약하기</button>";
                 }
 
-                html +=
-                    "<div class='mb-2'>" +
-                        "🕒 " + m.time + " | " + m.current + " / " + m.max +
-                        " " + btn +
-                    "</div>";
+                html += `
+                    <div class="match-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="match-time">🕒 \${m.time}</div>
+                                <div class="match-info">정원 \${m.current} / \${m.max}</div>
+                            </div>
+                            <div>\${btn}</div>
+                        </div>
+                    </div>
+                `;
             });
 
             box.innerHTML = html;

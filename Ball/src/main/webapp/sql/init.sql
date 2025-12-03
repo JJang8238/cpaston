@@ -7,7 +7,7 @@ CREATE TABLE `user` (
   username       VARCHAR(50)  NOT NULL UNIQUE,
   password       VARCHAR(100) NOT NULL,
   name           VARCHAR(100) NOT NULL,
-  role           VARCHAR(20)  NOT NULL DEFAULT 'student',
+  role           VARCHAR(20)  NOT NULL DEFAULT 'users',
   email          VARCHAR(255) UNIQUE,
   email_verified TINYINT(1)   NOT NULL DEFAULT 0
 );
@@ -90,3 +90,100 @@ CREATE TABLE IF NOT EXISTS post (
   updated_at   TIMESTAMP     NULL ON UPDATE CURRENT_TIMESTAMP
 );
 
+/* ============================================================
+ 7) 게시판(board)
+============================================================ */
+CREATE TABLE board (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(50) UNIQUE NOT NULL,
+  sort_order INT NOT NULL DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO board (name, sort_order) VALUES
+('전체', 1),
+('인기글', 2),
+('동네질문', 3);
+
+SELECT * FROM board ORDER BY sort_order
+/* ============================================================
+ 8) 게시글(post)
+============================================================ */
+CREATE TABLE post (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(200) NOT NULL,
+  content MEDIUMTEXT NOT NULL,
+  author VARCHAR(100) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
+
+  likes INT DEFAULT 0,
+  dislikes INT DEFAULT 0,
+  reports INT DEFAULT 0,
+
+  board_id INT NOT NULL DEFAULT 1,
+  FOREIGN KEY (board_id) REFERENCES board(id)
+        ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+/* ============================================================
+ 9) 게시글 투표(post_vote_log)
+============================================================ */
+CREATE TABLE post_vote_log (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    post_id INT NOT NULL,
+    user_id INT NOT NULL,
+    vote_type ENUM('like','dislike') NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE KEY uk_vote_unique (post_id, user_id),
+
+    FOREIGN KEY (post_id) REFERENCES post(id)
+        ON DELETE CASCADE,
+
+    FOREIGN KEY (user_id) REFERENCES user(id)
+        ON DELETE CASCADE
+);
+
+/* ============================================================
+ 10) 게시글 신고(post_report_log)
+============================================================ */
+CREATE TABLE post_report_log (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    post_id INT NOT NULL,
+    user_id VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE KEY uk_report_unique (post_id, user_id),
+
+    FOREIGN KEY (post_id) REFERENCES post(id)
+        ON DELETE CASCADE
+);
+
+INSERT INTO user (username, password, name, email, email_verified, role, profile_image)
+VALUES (
+    'test6',                                                   -- 아이디
+    SHA2('1234', 256),                                          -- 비밀번호(평문 X)
+    '김요우',                                                    -- 이름
+    'lejㄴsh1012@gmail.com',                                         -- 이메일
+    1,                                                          -- 이메일 인증됨(1) 처리
+    'student',                                                  -- 권한
+    'default-profile.png'                                       -- 기본 이미지
+);
+
+INSERT INTO match_reservations (match_date, match_time, location, current_players, max_players, match_status)
+VALUES 
+('2025-12-10', '10:00:00', '양주시유소년축구클럽', 2, 18, '예약중'),
+('2025-12-10', '12:00:00', '양주시유소년축구클럽', 5, 18, '예약중'),
+('2025-12-10', '14:00:00', '양주시유소년축구클럽', 7, 18, '예약중'),
+('2025-12-10', '16:00:00', '양주시유소년축구클럽', 9, 18, '예약중'),
+('2025-12-10', '18:00:00', '양주시유소년축구클럽', 1, 18, '예약중'),
+('2025-12-10', '20:00:00', '양주시유소년축구클럽', 0, 18, '예약중'),
+('2025-12-10', '22:00:00', '양주시유소년축구클럽', 2, 18, '예약중');
+
+UPDATE user 
+SET role = 'user'
+WHERE role = 'student';
+
+ALTER TABLE user 
+MODIFY role VARCHAR(20) NOT NULL DEFAULT 'user';

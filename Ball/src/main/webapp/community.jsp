@@ -1,32 +1,58 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.util.*" %>
-<%@ page import="dao.PostDAO, dto.Post" %>
+<%@ page import="dao.PostDAO" %>
+<%@ page import="dao.NoticeDAO" %>
+<%@ page import="dao.BoardDAO" %>
+<%@ page import="dto.User" %>
+<%@ page import="dto.Post" %>
+<%@ page import="dto.Notice" %>
+<%@ page import="dto.Board" %>
+
 <%
-  request.setCharacterEncoding("UTF-8");
-  String ctx = request.getContextPath();             // 예: /Ball
+    request.setCharacterEncoding("UTF-8");
+    String ctx = request.getContextPath();
 
-  // 카테고리
-  String category = request.getParameter("category");
-  if (category == null) category = "전체";
-  List<String> allowed = Arrays.asList("전체","인기글","동네질문");
-  if (!allowed.contains(category)) category = "전체";
+    User loginUser = (User) session.getAttribute("loginUser");
 
-  // DB에서 목록 조회
-  List<Post> posts;
-  try (PostDAO dao = new PostDAO()) {
-      posts = dao.list(category);
-  }
+    String categoryParam = request.getParameter("category");
+    int categoryId = 1;
 
-  String safeCategory = category
-      .replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
-      .replace("\"","&quot;").replace("'","&#39;");
+    try { categoryId = Integer.parseInt(categoryParam); } catch (Exception ignore) {}
+
+    List<Board> boards = new ArrayList<>();
+    try (BoardDAO bdao = new BoardDAO()) {
+        boards = bdao.list();
+    }
+
+    String categoryName = "전체";
+    for (Board b : boards) {
+        if (b.getId() == categoryId) {
+            categoryName = b.getName();
+            break;
+        }
+    }
+
+    List<Post> posts = new ArrayList<>();
+
+    try (PostDAO dao = new PostDAO()) {
+        if (categoryId == 1) {
+            posts = dao.listAll();
+        } else {
+            posts = dao.listByBoardId(categoryId);
+        }
+    }
+
+    Notice notice = null;
+    try (NoticeDAO ndao = new NoticeDAO()) {
+        notice = ndao.getLatestNotice();
+    }
 %>
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>볼피또 - 커뮤니티</title>
+<meta charset="UTF-8">
+<title>커뮤니티</title>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
@@ -149,7 +175,6 @@
         <div class="alert alert-warning mb-0">📢 현재 등록된 공지사항이 없습니다.</div>
       <% } %>
     </div>
-  </nav>
 
     <!-- 관리자 공지 작성 버튼 -->
     <% if (loginUser != null && "admin".equals(loginUser.getRole())) { %>
@@ -198,10 +223,6 @@
             <span class="badge text-bg-secondary">총 <%= posts.size() %>건</span>
           </div>
         </div>
-        <div class="d-grid mt-3">
-          <a href="<%=ctx%>/write.jsp?category=<%=category%>" class="btn btn-primary">글쓰기</a>
-        </div>
-      </aside>
 
         <% if (posts.isEmpty()) { %>
 
@@ -303,7 +324,8 @@
       </div>
 
     </div>
-  </main>
+  </div>
+</div>
 
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -392,6 +414,5 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 </script>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

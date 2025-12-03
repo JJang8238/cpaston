@@ -1,18 +1,8 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 </main>
-<footer class="mt-auto py-4 bg-dark text-light">
-  <div class="container text-center">
-
-      <div class="mb-1" style="font-size: 20px; font-weight: 700;">
-          ⚽ Ballpitto – Play Together, Enjoy More
-      </div>
-
-      <div class="small text-secondary">
-          📍 위치 기반 경기 매칭&nbsp;&nbsp;|&nbsp;&nbsp;
-          👥 파트너 찾기&nbsp;&nbsp;|&nbsp;&nbsp;
-          📝 리뷰 & 커뮤니티
-      </div>
-
+<footer class="py-5 bg-dark mt-5">
+  <div class="container px-4 px-lg-5">
+    <p class="m-0 text-center text-white">Copyright &copy; 플랩풋볼 2025</p>
   </div>
 </footer>
 

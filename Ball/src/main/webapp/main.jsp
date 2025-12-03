@@ -102,7 +102,7 @@
     </style>
 </head>
 
-<body class="d-flex flex-column min-vh-100 bg-light">
+<body>
 
 <!-- ⭐ 메인 전체를 content-wrap으로 감싸서 배경 분리 -->
 <div class="content-wrap">
@@ -223,7 +223,6 @@
 
     </div>
 </div>
-</main>
 
 <!-- Footer -->
 <footer class="mt-auto py-4 bg-dark text-light">
@@ -238,8 +237,11 @@
           👥 파트너 찾기&nbsp;&nbsp;|&nbsp;&nbsp;
           📝 리뷰 & 커뮤니티
       </div>
+
   </div>
 </footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

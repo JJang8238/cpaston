@@ -15,7 +15,7 @@
     }
 %>
 
-<%@ include file="/include/header.jsp" %>
+<jsp:include page="/include/header.jsp" />
 
 <style>
     body {

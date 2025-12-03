@@ -9,23 +9,26 @@ public class BoardDAO implements AutoCloseable {
     private Connection conn;
 
     // ----------------------------------------------------
-    // 🔥 DB 연결 — 콘솔 출력 추가
+    // 🔥 DB 연결 (AWS RDS)
     // ----------------------------------------------------
     public BoardDAO() {
         try {
-            String url = "jdbc:mysql://localhost:3306/grade_db?serverTimezone=UTC";
+            String url = "jdbc:mysql://database-1.cr6syquwsi52.ap-northeast-2.rds.amazonaws.com:3306/grade_db"
+                       + "?useUnicode=true&characterEncoding=utf8"
+                       + "&serverTimezone=Asia/Seoul&useSSL=true&allowPublicKeyRetrieval=true";
+
             System.out.println("📌 BoardDAO: DB 연결 시도 → " + url);
 
-            conn = DriverManager.getConnection(url, "root", "1234");
+            conn = DriverManager.getConnection(url, "admin", "wkdtpguS9162");
 
             System.out.println("✅ BoardDAO: DB 연결 성공");
-            
+
             try (Statement st = conn.createStatement();
-            	     ResultSet rs = st.executeQuery("SELECT DATABASE()")) {
-            	    if (rs.next()) {
-            	        System.out.println("📌 현재 DAO가 접속한 DB = " + rs.getString(1));
-            	    }
-            	}
+                 ResultSet rs = st.executeQuery("SELECT DATABASE()")) {
+                if (rs.next()) {
+                    System.out.println("📌 현재 접속 DB = " + rs.getString(1));
+                }
+            }
 
         } catch (Exception e) {
             System.out.println("❌ BoardDAO: DB 연결 실패");
@@ -35,72 +38,46 @@ public class BoardDAO implements AutoCloseable {
 
     private Connection getConn() throws Exception {
         if (conn == null || conn.isClosed()) {
-            String url = "jdbc:mysql://localhost:3306/grade_db?serverTimezone=UTC";
-            System.out.println("📌 BoardDAO: 연결 재시도 → " + url);
-            conn = DriverManager.getConnection(url, "root", "1234");
+            String url = "jdbc:mysql://database-1.cr6syquwsi52.ap-northeast-2.rds.amazonaws.com:3306/grade_db"
+                       + "?useUnicode=true&characterEncoding=utf8"
+                       + "&serverTimezone=Asia/Seoul&useSSL=true&allowPublicKeyRetrieval=true";
+
+            conn = DriverManager.getConnection(url, "admin", "👉여기에_RDS비밀번호_넣기👈");
         }
         return conn;
     }
 
     // ----------------------------------------------------
-    // 📌 "전체" 게시판 ID
+    // 📌 전체/인기글 ID
     // ----------------------------------------------------
     public int getAllBoardId() {
         String sql = "SELECT id FROM board WHERE name='전체' LIMIT 1";
         try (PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
-
-            if (rs.next()) {
-                System.out.println("✔ getAllBoardId: 전체 ID = " + rs.getInt(1));
-                return rs.getInt(1);
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        System.out.println("⚠ getAllBoardId: 기본값 1 반환");
+            if (rs.next()) return rs.getInt(1);
+        } catch (Exception e) {}
         return 1;
     }
 
-    // ----------------------------------------------------
-    // 📌 "인기글" 게시판 ID
-    // ----------------------------------------------------
     public int getHotBoardId() {
         String sql = "SELECT id FROM board WHERE name='인기글' LIMIT 1";
         try (PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
-
-            if (rs.next()) {
-                System.out.println("✔ getHotBoardId: 인기글 ID = " + rs.getInt(1));
-                return rs.getInt(1);
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        System.out.println("⚠ getHotBoardId: 기본값 2 반환");
+            if (rs.next()) return rs.getInt(1);
+        } catch (Exception e) {}
         return 2;
     }
 
-    // ----------------------------------------------------
-    // 📌 고정 게시판 여부
-    // ----------------------------------------------------
     public boolean isFixedBoard(int id) {
-        boolean fixed = (id == getAllBoardId() || id == getHotBoardId());
-        System.out.println("📌 isFixedBoard(" + id + ") = " + fixed);
-        return fixed;
+        return (id == getAllBoardId() || id == getHotBoardId());
     }
 
     // ----------------------------------------------------
-    // 📌 전체 게시판 목록
+    // 📌 목록
     // ----------------------------------------------------
     public List<Board> list() {
-
         List<Board> list = new ArrayList<>();
-
         String sql = "SELECT * FROM board ORDER BY sort_order ASC, id ASC";
-
-        System.out.println("📌 BoardDAO.list() 실행");
 
         try (PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -111,15 +88,11 @@ public class BoardDAO implements AutoCloseable {
                 b.setName(rs.getString("name"));
                 b.setSortOrder(rs.getInt("sort_order"));
                 list.add(b);
-
-                System.out.println("→ 로딩됨: ID=" + b.getId() + ", name=" + b.getName());
             }
 
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        System.out.println("📌 BoardDAO.list(): 총 " + list.size() + "개 로드됨");
 
         return list;
     }
@@ -128,13 +101,8 @@ public class BoardDAO implements AutoCloseable {
     // 📌 단일 조회
     // ----------------------------------------------------
     public Board get(int id) {
-
         String sql = "SELECT * FROM board WHERE id=?";
-
-        System.out.println("📌 BoardDAO.get(" + id + ") 호출");
-
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setInt(1, id);
 
             try (ResultSet rs = ps.executeQuery()) {
@@ -143,8 +111,6 @@ public class BoardDAO implements AutoCloseable {
                     b.setId(rs.getInt("id"));
                     b.setName(rs.getString("name"));
                     b.setSortOrder(rs.getInt("sort_order"));
-
-                    System.out.println("✔ BoardDAO.get(): " + b.getName());
                     return b;
                 }
             }
@@ -153,24 +119,20 @@ public class BoardDAO implements AutoCloseable {
             e.printStackTrace();
         }
 
-        System.out.println("⚠ BoardDAO.get(): 없음");
         return null;
     }
 
     // ----------------------------------------------------
-    // 📌 게시판 추가
+    // 📌 추가
     // ----------------------------------------------------
     public void insert(String name) {
-
-        System.out.println("📌 BoardDAO.insert(): name = " + name);
-
         try {
             int maxOrder = 0;
 
-            try (PreparedStatement psMax = conn.prepareStatement("SELECT MAX(sort_order) FROM board");
-                 ResultSet rsMax = psMax.executeQuery()) {
+            try (PreparedStatement ps = conn.prepareStatement("SELECT MAX(sort_order) FROM board");
+                 ResultSet rs = ps.executeQuery()) {
 
-                if (rsMax.next()) maxOrder = rsMax.getInt(1);
+                if (rs.next()) maxOrder = rs.getInt(1);
             }
 
             try (PreparedStatement ps = conn.prepareStatement(
@@ -178,82 +140,83 @@ public class BoardDAO implements AutoCloseable {
 
                 ps.setString(1, name);
                 ps.setInt(2, maxOrder + 1);
-
                 ps.executeUpdate();
             }
 
-            System.out.println("✔ BoardDAO.insert() 완료");
-
         } catch (Exception e) {
-            System.out.println("❌ BoardDAO.insert() 실패");
             e.printStackTrace();
         }
     }
 
- // ----------------------------------------------------
- // 📌 게시판 이름 수정
- // ----------------------------------------------------
- public void update(int id, String name) {
+    // ----------------------------------------------------
+    // 📌 삭제
+    // ----------------------------------------------------
+    public boolean delete(int id) {
 
-     System.out.println("📌 BoardDAO.update(): id=" + id + ", name=" + name);
+        if (isFixedBoard(id)) {
+            System.out.println("❌ 기본 게시판 삭제 불가");
+            return false;
+        }
 
-     String sql = "UPDATE board SET name=? WHERE id=?";
+        String sql = "DELETE FROM board WHERE id=?";
 
-     try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
 
-         ps.setString(1, name);
-         ps.setInt(2, id);
+            ps.setInt(1, id);
+            return ps.executeUpdate() > 0;
 
-         ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
-         System.out.println("✔ BoardDAO.update() 완료");
-
-     } catch (Exception e) {
-         System.out.println("❌ BoardDAO.update() 실패");
-         e.printStackTrace();
-     }
- }
-
-//----------------------------------------------------
-//📌 게시판 삭제
-//----------------------------------------------------
-public void delete(int id) {
-
-  System.out.println("📌 BoardDAO.delete(): id = " + id);
-
-  // 🔒 "전체", "인기글" 같은 고정 게시판은 삭제 금지
-  if (isFixedBoard(id)) {
-      System.out.println("⚠ 고정 게시판 삭제 시도 → 예외 발생");
-      throw new IllegalStateException("고정 게시판은 삭제할 수 없습니다.");
-  }
-
-  String sql = "DELETE FROM board WHERE id=?";
-
-  try (PreparedStatement ps = conn.prepareStatement(sql)) {
-
-      ps.setInt(1, id);
-      int rows = ps.executeUpdate();
-
-      System.out.println("✔ BoardDAO.delete(): 삭제된 행 수 = " + rows);
-
-  } catch (Exception e) {
-      System.out.println("❌ BoardDAO.delete() 실패");
-      e.printStackTrace();
-
-      // 필요하면 여기서도 상황에 따라 IllegalStateException으로 감싸서 던질 수도 있음 (예: FK 제약 등)
-      // 하지만 이건 프로젝트 설계에 따라 달라져서, 지금은 단순히 로그만 남김.
-  }
-}
+        return false;
+    }
 
     // ----------------------------------------------------
-    // 삭제 / 수정은 동일하게 로그 추가 가능
+    // 📌 정렬순서 업데이트
     // ----------------------------------------------------
+    public boolean updateSortOrder(String[] idArr) {
 
+        System.out.println("📌 updateSortOrder 호출 — 배열 길이: " + idArr.length);
+
+        String sql = "UPDATE board SET sort_order=? WHERE id=?";
+
+        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+
+            int order = 1;
+
+            for (String idStr : idArr) {
+
+                int id = Integer.parseInt(idStr);
+
+                ps.setInt(1, order);
+                ps.setInt(2, id);
+                ps.addBatch();
+
+                order++;
+            }
+
+            ps.executeBatch();
+
+            System.out.println("✔ updateSortOrder 적용 완료");
+
+            return true;
+
+        } catch (Exception e) {
+            System.out.println("❌ updateSortOrder 실패");
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    // ----------------------------------------------------
+    // 📌 연결 종료
+    // ----------------------------------------------------
     @Override
     public void close() {
         try {
             if (conn != null && !conn.isClosed()) {
-                System.out.println("✔ BoardDAO: DB 연결 종료");
                 conn.close();
             }
         } catch (Exception ignore) {}

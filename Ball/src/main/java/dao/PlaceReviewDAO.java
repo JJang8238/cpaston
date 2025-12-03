@@ -7,16 +7,38 @@ import java.util.*;
 
 public class PlaceReviewDAO implements AutoCloseable {
 
-	@Override
-	public void close() {
-	    // 아무것도 안 함 (연결은 try-with-resources에서 처리됨)
-	}
+    @Override
+    public void close() {
+        // 아무것도 안 함 (연결은 try-with-resources에서 처리됨)
+    }
 
     // ======================================================
-    // 1) 장소별 리뷰 목록 조회
+    // 0) 장소별 리뷰 목록 조회 (기본: 최신순) - 기존 코드와의 호환용
     // ======================================================
     public List<Map<String, Object>> listByPlace(String placeName) {
+        // 기본은 최신순
+        return listByPlace(placeName, "newest");
+    }
+
+    // ======================================================
+    // 1) 장소별 리뷰 목록 조회 (+ 정렬 옵션)
+    //    sort: newest, oldest, high, low
+    // ======================================================
+    public List<Map<String, Object>> listByPlace(String placeName, String sort) {
         List<Map<String, Object>> list = new ArrayList<>();
+
+        // 정렬 기준 결정
+        String orderBy;
+        if ("oldest".equals(sort)) {
+            orderBy = " ORDER BY r.created_at ASC";
+        } else if ("high".equals(sort)) {
+            orderBy = " ORDER BY r.rating DESC, r.created_at DESC";
+        } else if ("low".equals(sort)) {
+            orderBy = " ORDER BY r.rating ASC, r.created_at DESC";
+        } else {
+            // 기본: 최신순
+            orderBy = " ORDER BY r.created_at DESC";
+        }
 
         String sql = """
           SELECT r.id,
@@ -29,8 +51,7 @@ public class PlaceReviewDAO implements AutoCloseable {
           FROM place_reviews r
           JOIN `user` u ON u.id = r.user_id
           WHERE r.place_name = ?
-          ORDER BY r.id DESC
-        """;
+        """ + orderBy;
 
         try (Connection c = DBConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {

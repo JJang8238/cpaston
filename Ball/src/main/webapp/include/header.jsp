@@ -42,7 +42,6 @@
         <% } else { %>
           <li class="nav-item"><a class="nav-link" href="<%=ctxPath%>/login.jsp">로그인</a></li>
           <li class="nav-item"><a class="nav-link" href="<%=ctxPath%>/register.jsp">회원가입</a></li>
-
         <% } %>
       </ul>
     </div>

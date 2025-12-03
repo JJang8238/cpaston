@@ -38,7 +38,7 @@ public class UserDAO implements AutoCloseable {
     public boolean registerUser(String username, String password, String name, String email) {
         final String sql =
             "INSERT INTO `user` (`username`,`password`,`name`,`email`,`email_verified`,`role`) " +
-            "VALUES (?, ?, ?, ?, ?, 'student')";
+            "VALUES (?, ?, ?, ?, ?, 'users')";
 
         try (PreparedStatement pstmt = getConn().prepareStatement(sql)) {
             String hashedPassword = PasswordUtil.hashPassword(password);

@@ -19,12 +19,6 @@ public class Post {
     private Timestamp createdAt;
     private Timestamp updatedAt;
 
-    private int likes;
-    private int dislikes;
-
-    // ⭐ 추가된 필드
-    private int reports;
-
     public Post() {}
 
     // --------------------
@@ -34,7 +28,6 @@ public class Post {
     public int getId() {
         return id;
     }
-
     public void setId(int id) {
         this.id = id;
     }
@@ -42,7 +35,6 @@ public class Post {
     public String getTitle() {
         return title;
     }
-
     public void setTitle(String title) {
         this.title = title;
     }
@@ -50,25 +42,50 @@ public class Post {
     public String getContent() {
         return content;
     }
-
     public void setContent(String content) {
         this.content = content;
-    }
-
-    public String getCategory() {
-        return category;
-    }
-
-    public void setCategory(String category) {
-        this.category = category;
     }
 
     public String getAuthor() {
         return author;
     }
-
     public void setAuthor(String author) {
         this.author = author;
+    }
+
+    public int getBoardId() {
+        return boardId;
+    }
+    public void setBoardId(int boardId) {
+        this.boardId = boardId;
+    }
+
+    public String getBoardName() {
+        return boardName;
+    }
+    public void setBoardName(String boardName) {
+        this.boardName = boardName;
+    }
+
+    public int getLikes() {
+        return likes;
+    }
+    public void setLikes(int likes) {
+        this.likes = likes;
+    }
+
+    public int getDislikes() {
+        return dislikes;
+    }
+    public void setDislikes(int dislikes) {
+        this.dislikes = dislikes;
+    }
+
+    public int getReports() {
+        return reports;
+    }
+    public void setReports(int reports) {
+        this.reports = reports;
     }
 
     public Timestamp getCreatedAt() {
@@ -81,35 +98,7 @@ public class Post {
     public Timestamp getUpdatedAt() {
         return updatedAt;
     }
-
     public void setUpdatedAt(Timestamp updatedAt) {
         this.updatedAt = updatedAt;
-    }
-
-    public int getLikes() {
-        return likes;
-    }
-
-    public void setLikes(int likes) {
-        this.likes = likes;
-    }
-
-    public int getDislikes() {
-        return dislikes;
-    }
-
-    public void setDislikes(int dislikes) {
-        this.dislikes = dislikes;
-    }
-
-    // -----------------------------
-    // ⭐ 추가된 Getter / Setter
-    // -----------------------------
-    public int getReports() {
-        return reports;
-    }
-
-    public void setReports(int reports) {
-        this.reports = reports;
     }
 }

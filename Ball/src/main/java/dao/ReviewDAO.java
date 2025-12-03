@@ -74,10 +74,10 @@ public class ReviewDAO implements AutoCloseable {
     }
 
     // ====================================
-    // 🔥 리뷰가 존재하는 장소 목록 (중복 제거)
+    // ⭐ 리뷰가 존재하는 장소 목록
     // ====================================
     public List<String> getReviewedPlaces() {
-        final String sql = "SELECT DISTINCT place_name FROM review ORDER BY place_name ASC";
+        final String sql = "SELECT DISTINCT place_name FROM place_reviews ORDER BY place_name ASC";
         List<String> list = new ArrayList<>();
 
         try (PreparedStatement ps = getConn().prepareStatement(sql);
@@ -95,11 +95,19 @@ public class ReviewDAO implements AutoCloseable {
     }
 
     // ====================================
-    // 🔥 전체 리뷰 목록(관리자용)
+    // ⭐ 전체 리뷰 목록 (관리자)
     // ====================================
     public List<Review> listAll() {
-        final String sql = "SELECT * FROM review ORDER BY id DESC";
+        final String sql =
+                """
+                SELECT pr.*, u.username AS author_name
+                FROM place_reviews pr
+                JOIN user u ON pr.user_id = u.id
+                ORDER BY pr.id DESC
+                """;
+
         List<Review> list = new ArrayList<>();
+
         try (PreparedStatement ps = getConn().prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
 
@@ -113,10 +121,10 @@ public class ReviewDAO implements AutoCloseable {
     }
 
     // ====================================
-    // 🔥 리뷰 삭제(관리자용)
+    // ⭐ 리뷰 삭제
     // ====================================
     public int delete(int id) {
-        final String sql = "DELETE FROM review WHERE id=?";
+        final String sql = "DELETE FROM place_reviews WHERE id=?";
         try (PreparedStatement ps = getConn().prepareStatement(sql)) {
             ps.setInt(1, id);
             return ps.executeUpdate();
@@ -127,7 +135,7 @@ public class ReviewDAO implements AutoCloseable {
     }
 
     // ====================================
-    // ResultSet → DTO 매핑
+    // ⭐ ResultSet → DTO 매핑
     // ====================================
     private Review map(ResultSet rs) throws SQLException {
         Review r = new Review();

@@ -9,14 +9,17 @@ public class BoardDAO implements AutoCloseable {
     private Connection conn;
 
     // ----------------------------------------------------
-    // 🔥 DB 연결
+    // 🔥 DB 연결 (AWS RDS)
     // ----------------------------------------------------
     public BoardDAO() {
         try {
-            String url = "jdbc:mysql://localhost:3306/grade_db?serverTimezone=UTC";
+            String url = "jdbc:mysql://database-1.cr6syquwsi52.ap-northeast-2.rds.amazonaws.com:3306/grade_db"
+                       + "?useUnicode=true&characterEncoding=utf8"
+                       + "&serverTimezone=Asia/Seoul&useSSL=true&allowPublicKeyRetrieval=true";
+
             System.out.println("📌 BoardDAO: DB 연결 시도 → " + url);
 
-            conn = DriverManager.getConnection(url, "root", "8238");
+            conn = DriverManager.getConnection(url, "admin", "wkdtpguS9162");
 
             System.out.println("✅ BoardDAO: DB 연결 성공");
 
@@ -35,8 +38,11 @@ public class BoardDAO implements AutoCloseable {
 
     private Connection getConn() throws Exception {
         if (conn == null || conn.isClosed()) {
-            String url = "jdbc:mysql://localhost:3306/grade_db?serverTimezone=UTC";
-            conn = DriverManager.getConnection(url, "root", "8238");
+            String url = "jdbc:mysql://database-1.cr6syquwsi52.ap-northeast-2.rds.amazonaws.com:3306/grade_db"
+                       + "?useUnicode=true&characterEncoding=utf8"
+                       + "&serverTimezone=Asia/Seoul&useSSL=true&allowPublicKeyRetrieval=true";
+
+            conn = DriverManager.getConnection(url, "admin", "👉여기에_RDS비밀번호_넣기👈");
         }
         return conn;
     }
@@ -183,7 +189,6 @@ public class BoardDAO implements AutoCloseable {
 
                 int id = Integer.parseInt(idStr);
 
-                // 전체/인기글도 순서 변경 가능
                 ps.setInt(1, order);
                 ps.setInt(2, id);
                 ps.addBatch();

@@ -244,7 +244,11 @@ let currentPlaceName = null;
 let userMarkerImage = null;
 let placeMarkerImage = null;
 
-// 위치 옵션(정확도/타임아웃/캐시)
+// 기본 위치 (경동대학교 양주캠퍼스)
+const DEFAULT_LAT = 37.8100
+const DEFAULT_LNG = 127.07
+
+// 위치 옵션(정확도/타임아웃/캐시) – 지금은 geolocation 안 쓰지만 남겨둠
 const GEO_OPTS = {
     enableHighAccuracy: true,
     timeout: 10000,
@@ -267,16 +271,9 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 /* 지도 초기화 */
+// ❗ geolocation 제거, 무조건 경동대 양주캠퍼스로 시작
 function initAppKakao() {
-    navigator.geolocation.getCurrentPosition(
-        pos => createMap(pos.coords.latitude, pos.coords.longitude),
-        err => {
-            console.warn("📌 Geolocation failed on init:", err);
-            // 실패 시 서울 시청 기본 좌표
-            createMap(37.5665, 126.9780);
-        },
-        GEO_OPTS
-    );
+    createMap(DEFAULT_LAT, DEFAULT_LNG);
 }
 
 function createMap(lat, lng) {
@@ -370,7 +367,8 @@ function searchAround() {
         {
             location:new kakao.maps.LatLng(userCenter.lat, userCenter.lng),
             radius:r,
-            sort:kakao.maps.services.SortBy.DISTANCE
+            sort:kakao.maps.services.SortBy.DISTANCE,
+            useMapCenter:false 
         }
     );
 }
@@ -597,43 +595,15 @@ function cancelReserve(matchId) {
 }
 
 // 현재 위치로 버튼용
+// ❗ geolocation 사용 안 하고, 항상 경동대 양주캠퍼스로 이동
 function relocateToMe() {
-    if (!navigator.geolocation) {
-        alert("이 브라우저는 위치 기능을 지원하지 않습니다.");
-        return;
+    userCenter = {lat: DEFAULT_LAT, lng: DEFAULT_LNG};
+
+    if (kakaoMap) {
+        kakaoMap.setCenter(new kakao.maps.LatLng(userCenter.lat, userCenter.lng));
+        drawUserSpot();
+        searchAround();
     }
-
-    navigator.geolocation.getCurrentPosition(
-        pos => {
-            userCenter = {lat:pos.coords.latitude, lng:pos.coords.longitude};
-
-            if (kakaoMap) {
-                kakaoMap.setCenter(new kakao.maps.LatLng(userCenter.lat, userCenter.lng));
-                drawUserSpot();
-                searchAround();
-            } else {
-                console.log("지도 로딩 전 위치만 갱신:", userCenter);
-            }
-        },
-        err => {
-            console.warn("📌 Geolocation error:", err);
-
-            switch (err.code) {
-                case err.PERMISSION_DENIED:
-                    alert("위치 권한이 거부됐어요. 브라우저 주소창 옆 🔒/📍에서 위치 허용으로 바꿔줘!");
-                    break;
-                case err.POSITION_UNAVAILABLE:
-                    alert("현재 위치 정보를 가져올 수 없어요. GPS/네트워크 상태를 확인해줘!");
-                    break;
-                case err.TIMEOUT:
-                    alert("위치 요청 시간이 초과됐어요. 다시 눌러줘!");
-                    break;
-                default:
-                    alert("위를 가져올 수 없습니다.");
-            }
-        },
-        GEO_OPTS
-    );
 }
 
 // “이 위치에서 검색” 버튼용

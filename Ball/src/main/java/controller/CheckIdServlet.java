@@ -5,16 +5,6 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
 
-/**
- * 아이디 중복 확인 서블릿
- * URL: /check_id
- *
- * 톰캣 10 (jakarta.*) 환경에서 동작.
- * 배포 후 404가 나올 경우:
- *  - Project > Clean
- *  - Tomcat Stop → Clean/Publish → Start
- *  - 혹시 web.xml만 쓰는 설정이면 아래 주석의 web.xml 매핑도 추가
- */
 @WebServlet(name = "CheckIdServlet", urlPatterns = {"/check_id"})
 public class CheckIdServlet extends HttpServlet {
     @Override

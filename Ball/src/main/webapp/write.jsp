@@ -15,10 +15,9 @@
         return;
     }
 
-    // 작성자
     String author = loginUser.getUsername();
 
-    // ⭐ board_id 파라미터 받기
+    // board_id 파라미터 받기
     String param = request.getParameter("board_id");
     int boardId = 1;
     try { boardId = Integer.parseInt(param); } catch (Exception ignore) {}
@@ -34,70 +33,89 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>글쓰기</title>
+<title>새 글 작성 - 볼피또</title>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+    body {
+        background:#f5f6f8;
+        font-family:'Pretendard','Noto Sans KR', sans-serif;
+    }
+
+    .write-card {
+        border-radius:16px;
+        border:1px solid #e8e8e8;
+        background:white;
+        padding:28px;
+    }
+
+    .form-label {
+        font-weight:600;
+        margin-bottom:6px;
+    }
+
+    .title-text {
+        font-size:28px;
+        font-weight:700;
+        margin-bottom:24px;
+    }
+
+    textarea {
+        resize: vertical;
+    }
+</style>
 </head>
 
-<body class="d-flex flex-column min-vh-100 bg-light">
+<body>
 
 <jsp:include page="/nav.jsp" />
 
-<main class="container my-5 flex-grow-1">
+<main class="container my-5" style="max-width:850px;">
 
-  <div class="row justify-content-center">
-    <div class="col-md-8">
+    <!-- 페이지 제목 -->
+    <h3 class="fw-bold mb-4">새 글 작성</h3>
 
-      <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
-          <b>새 글 작성</b>
-        </div>
+    <!-- 카드 -->
+    <div class="write-card shadow-sm">
 
-        <div class="card-body">
-
-          <form action="<%=ctx%>/write_process.jsp" method="post" class="needs-validation" novalidate>
+        <form action="<%=ctx%>/write_process.jsp" method="post">
 
             <input type="hidden" name="author" value="<%=author%>">
 
-            <!-- 게시판 -->
-            <div class="mb-3">
-              <label class="form-label">게시판</label>
-              <select name="board_id" class="form-select" required>
-                <% for (Board b : boards) { %>
-                  <option value="<%=b.getId()%>" <%= (b.getId()==boardId ? "selected" : "") %>>
-                    <%= b.getName() %>
-                  </option>
-                <% } %>
-              </select>
-              <div class="invalid-feedback">게시판을 선택하세요.</div>
+            <!-- 게시판 선택 -->
+            <div class="mb-4">
+                <label class="form-label">게시판</label>
+                <select name="board_id" class="form-select" required>
+                    <% for (Board b : boards) { %>
+                      <option value="<%=b.getId()%>" <%= (b.getId()==boardId ? "selected" : "") %>>
+                        <%= b.getName() %>
+                      </option>
+                    <% } %>
+                </select>
             </div>
 
             <!-- 제목 -->
-            <div class="mb-3">
-              <label class="form-label">제목</label>
-              <input type="text" name="title" class="form-control" maxlength="200" required>
-              <div class="invalid-feedback">제목을 입력하세요.</div>
+            <div class="mb-4">
+                <label class="form-label">제목</label>
+                <input type="text" name="title" class="form-control" required maxlength="200">
             </div>
 
             <!-- 내용 -->
-            <div class="mb-3">
-              <label class="form-label">내용</label>
-              <textarea name="content" class="form-control" rows="7" required></textarea>
-              <div class="invalid-feedback">내용을 입력하세요.</div>
+            <div class="mb-4">
+                <label class="form-label">내용</label>
+                <textarea name="content" class="form-control" rows="10" required></textarea>
             </div>
 
-            <div class="d-flex justify-content-between">
-              <a class="btn btn-secondary" href="<%=ctx%>/community.jsp?category=<%=boardId%>">취소</a>
-              <button type="submit" class="btn btn-primary">등록</button>
+            <!-- 버튼 -->
+            <div class="d-flex justify-content-end gap-2">
+                <a class="btn btn-outline-secondary" href="<%=ctx%>/community.jsp?category=<%=boardId%>">취소</a>
+                <button type="submit" class="btn btn-primary px-4">등록</button>
             </div>
 
-          </form>
-
-        </div>
-      </div>
+        </form>
 
     </div>
-  </div>
 
 </main>
 

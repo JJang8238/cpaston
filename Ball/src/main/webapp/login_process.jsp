@@ -44,7 +44,7 @@
             Object dummy = userCls.getDeclaredConstructor().newInstance();
 
             try { userCls.getMethod("setUsername", String.class).invoke(dummy, LoginConst.TEMP_ID); } catch (Exception ignore) {}
-            try { userCls.getMethod("setName",     String.class).invoke(dummy, "임시 관리자"); } catch (Exception ignore) {}
+            try { userCls.getMethod("setName",     String.class).invoke(dummy, "관리자"); } catch (Exception ignore) {}
             try { userCls.getMethod("setEmail",    String.class).invoke(dummy, "admin@example.com"); } catch (Exception ignore) {}
             try { userCls.getMethod("setRole",     String.class).invoke(dummy, "admin"); } catch (Exception ignore) {}
 

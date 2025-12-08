@@ -14,11 +14,10 @@
     boolean fixed = false;
 
     try (BoardDAO dao = new BoardDAO()) {
-        fixed = dao.isFixedBoard(id);  // 🔥 고정 여부 체크
+        fixed = dao.isFixedBoard(id);
         board = dao.get(id);
     }
 
-    // 🔥 고정 게시판 수정 방지
     if (fixed) {
 %>
 <script>
@@ -41,41 +40,93 @@
 %>
 
 <style>
-    .center-wrapper {
-        max-width: 600px;
-        margin: 50px auto;
+    body {
+        background-color: #f4f6f9;
+        font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+    }
+
+    .edit-container {
+        max-width: 720px;
+        margin: 60px auto;
+    }
+
+    .edit-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 40px 50px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    }
+
+    .edit-title {
+        font-size: 32px;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 35px;
+    }
+
+    .form-label {
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #444;
+    }
+
+    .form-control {
+        border-radius: 12px;
+        padding: 12px 14px;
+        font-size: 15px;
+    }
+
+    .btn-submit {
+        background-color: #007bff;
+        padding: 12px 18px;
+        font-size: 16px;
+        border-radius: 10px;
+        width: 120px;
+    }
+
+    .btn-cancel {
+        background-color: #6c757d;
+        color: white;
+        padding: 12px 18px;
+        font-size: 16px;
+        border-radius: 10px;
+        width: 120px;
+    }
+
+    .btn-wrapper {
+        margin-top: 35px;
+        display: flex;
+        justify-content: center;
+        gap: 15px;
     }
 </style>
 
-<div class="center-wrapper">
+<div class="edit-container">
+    <div class="edit-card">
 
-    <div class="card shadow-sm">
-        <div class="card-body">
+        <h2 class="edit-title">게시판 수정</h2>
 
-            <h3 class="fw-bold mb-4 text-center">게시판 수정</h3>
+        <form method="post" action="<%=ctx%>/admin/pages/board_edit_process.jsp">
 
-            <form method="post" action="board_edit_process.jsp">
+            <input type="hidden" name="id" value="<%=board.getId()%>">
 
-                <input type="hidden" name="id" value="<%=board.getId()%>">
+            <div class="mb-3">
+                <label class="form-label">게시판 이름</label>
+                <input type="text"
+                       name="name"
+                       class="form-control"
+                       value="<%=board.getName()%>"
+                       required>
+            </div>
 
-                <div class="mb-3">
-                    <label class="form-label">게시판 이름</label>
-                    <input type="text"
-                           name="name"
-                           class="form-control"
-                           value="<%=board.getName()%>"
-                           required>
-                </div>
+            <div class="btn-wrapper">
+                <button type="submit" class="btn btn-primary btn-submit">수정하기</button>
 
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-primary">수정하기</button>
-                    <a href="<%=ctx%>/admin/admin_menu.jsp?page=board"
-                       class="btn btn-secondary">취소</a>
-                </div>
+                <a href="<%=ctx%>/admin/admin_menu.jsp?page=board"
+                   class="btn btn-cancel">취소</a>
+            </div>
 
-            </form>
+        </form>
 
-        </div>
     </div>
-
 </div>

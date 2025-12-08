@@ -33,7 +33,7 @@ public class NoticeServlet extends HttpServlet {
                 out.println("<p>공지사항을 찾을 수 없습니다.</p>");
                 return;
             }
-
+           
             out.println("<h5 class='fw-bold'>" + n.getTitle() + "</h5>");
             out.println("<hr>");
             out.println("<p>" + n.getContent().replace("\n", "<br>") + "</p>");
